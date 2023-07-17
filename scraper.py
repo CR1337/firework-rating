@@ -1,4 +1,5 @@
 import multiprocessing
+import time
 from concurrent.futures import ThreadPoolExecutor
 from itertools import chain
 from string import digits
@@ -8,7 +9,7 @@ from typing import Callable, Iterator
 import requests
 from bs4 import BeautifulSoup
 from peewee import DoesNotExist
-import time
+
 from product import Product
 
 
