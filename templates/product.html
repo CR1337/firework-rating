@@ -1,0 +1,150 @@
+<html>
+    <head>
+        <title>{{ product.name }}</title>
+    </head>
+    <body>
+        <a href="{{ product.url }}"><h2>{{ product.name }}</h2></a>
+        <table>
+            <tr>
+                <td>
+                    {% if product.youtube_handle is not none %}
+                        <iframe width="560" height="315" src="https://www.youtube.com/embed/{{ product.youtube_handle }}" frameborder="0" allowfullscreen></iframe>
+                    {% else %}
+                        <a href="https://www.youtube.com/results?search_query={{ product.name }}">Youtube Search</a>
+                    {% endif %}
+                </td>
+                <td>
+                    <input type="radio" name="rating" id="like" {{ "checked" if product.rated and product.rating }}>
+                    <label for="like">Like</label>
+                </td>
+                <td>
+                    <input type="radio" name="rating" id="dislike" {{ "checked" if product.rated and not product.rating }}>
+                    <label for="dislike">Dislike</label>
+                </td>
+                <td>
+                    <button type="button">Save</button><br>
+                    <button type="button">Next unrated</button>
+                </td>
+            </tr>
+        </table>
+        <input type="checkbox" id="availability" {{ "checked" if product.availability }}>
+        <label for="availability">Available</label>
+        <input type="checkbox" id="rated" {{ "checked" if product.rated }}>
+        <label for="rated">Rated</label>
+        <input type="checkbox" id="fan" {{ "checked" if product.fan }}>
+        <label for="fan">Fan</label>
+        Tags:
+
+        <br>
+
+        <table>
+            <tr>
+                <td>Price:</td>
+                <td>{{ product.price / 100 if product.price is not none else '-' }} €</td>
+                {% if product.price is not none %}
+                    <td><img src="../static/product_plots/{{ product.id_ }}_price.svg"></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+
+                <td>NEM/s:</td>
+                <td>{{ product.nem_per_second if product.nem_per_second is not none else "N-" }} g/s</td>
+                {% if product.nem_per_second is not none %}
+                    <td><img src="../static/product_plots/{{ product.id_ }}_nem_per_second.svg"></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+            </tr>
+            <tr>
+                <td>Shots:</td>
+                <td>{{ product.shot_count if product.shot_count is not none else '-' }}</td>
+                {% if product.shot_count is not none %}
+                    <td><img src="../static/product_plots/{{ product.id_ }}_shot_count.svg"></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+
+                <td>NEM/Shot:</td>
+                <td>{{ product.nem_per_shot if product.nem_per_shot is not none else "N-" }} g</td>
+                {% if product.nem_per_shot is not none %}
+                    <td><img src="../static/product_plots/{{ product.id_ }}_nem_per_shot.svg"></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+            </tr>
+            <tr>
+                <td>Duration:</td>
+                <td>{{ product.duration if product.duration is not none else '-' }} s</td>
+                {% if product.duration is not none %}
+                    <td><img src="../static/product_plots/{{ product.id_ }}_duration.svg"></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+
+                <td>€/s:</td>
+                <td>{{ product.price_per_second / 100 if product.price_per_second is not none else "N-" }} €/s</td>
+                {% if product.price_per_second is not none %}
+                    <td><img src="../static/product_plots/{{ product.id_ }}_price_per_second.svg"></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+            </tr>
+            <tr>
+                <td>NEM:</td>
+                <td>{{ product.nem / 1000 if product.nem is not none else '-' }} kg</td>
+                {% if product.nem is not none %}
+                    <td><img src="../static/product_plots/{{ product.id_ }}_nem.svg"></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+
+                <td>€/Shot:</td>
+                <td>{{ product.price_per_shot / 100 if product.price_per_shot is not none else "N-" }} €</td>
+                {% if product.price_per_shot is not none %}
+                    <td><img src="../static/product_plots/{{ product.id_ }}_price_per_shot.svg"></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+            </tr>
+            <tr>
+                <td>Min. Height:</td>
+                <td>{{ product.min_height if product.min_height is not none else '-' }} m</td>
+                {% if product.min_height is not none %}
+                    <td><img src="../static/product_plots/{{ product.id_ }}_min_height.svg"></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+
+                <td>€/NEM:</td>
+                <td>{{ product.price_per_nem / 10 if product.price_per_nem is not none else "-" }} €/kg</td>
+                {% if product.price_per_nem is not none %}
+                    <td><img src="../static/product_plots/{{ product.id_ }}_price_per_nem.svg"></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+            </tr>
+            <tr>
+                <td>Max. Height:</td>
+                <td>{{ product.max_height if product.max_height is not none else '-' }} m</td>
+                {% if product.max_height is not none %}
+                    <td><img src="../static/product_plots/{{ product.id_ }}_max_height.svg"></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+
+                <td>Shots/s:</td>
+                <td>{{ product.shots_per_second if product.shots_per_second is not none else "-" }} Hz</td>
+                {% if product.shots_per_second is not none %}
+                    <td><img src="../static/product_plots/{{ product.id_ }}_shots_per_second.svg"></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+            </tr>
+            <tr>
+
+            </tr>
+        </table>
+
+
+    </body>
+</html>

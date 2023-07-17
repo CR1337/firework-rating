@@ -1,0 +1,39 @@
+<html>
+    <head>
+        <title>Overview</title>
+    </head>
+    <body>
+        <table>
+            <tr>
+                <th>Shop Page</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Youtube Link</th>
+                <th>Shot Count</th>
+                <th>Duration</th>
+                <th>NEM</th>
+                <th>Rating</th>
+                <th>Rated</th>
+                <th>Tags</th>
+            </tr>
+            {% for product in products %}
+            <tr>
+                <td align="left"><a href="{{ product.url }}">Pyroland</a></th>
+                <td align="left"><a href="product/{{ product.id_ }}">{{ product.name }}</a></th>
+                <td align="right">{{ product.price / 100 if product.price is not none else 'None' }} €</th>
+                {% if product.youtube_handle is not none %}
+                    <td align="left"><a href="https://youtube.com/watch?v={{ product.youtube_handle }}">Youtube</a></th>
+                {% else %}
+                    <td align="right"><a href="https://www.youtube.com/results?search_query={{ product.name }}">Search</a></th>
+                {% endif %}
+                <td align="right">{{ product.shot_count }}</th>
+                <td align="right">{{ product.duration }}</th>
+                <td align="right">{{ product.nem / 1000 if product.nem is not none else 'None' }} kg</th>
+                <td align="right">{{ product.rating }}</th>
+                <td align="right">{{ product.rated }}</th>
+                <td align="right">{{ product.tags }}</th>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
