@@ -76,27 +76,45 @@ class Product(BaseModel):
 
     @property
     def nem_per_second(self) -> float:
-        return self.nem / self.duration
+        try:
+            return round(self.nem / self.duration, 2)
+        except TypeError:
+            return
 
     @property
     def nem_per_shot(self) -> float:
-        return self.nem / self.shot_count
+        try:
+            return round(self.nem / self.shot_count, 2)
+        except TypeError:
+            return
 
     @property
     def shots_per_second(self) -> float:
-        return self.shot_count / self.duration
+        try:
+            return (self.shot_count / self.duration, 2)
+        except TypeError:
+            return
 
     @property
     def price_per_shot(self) -> float:
-        self.price / self.shot_count
+        try:
+            return round(self.price / self.shot_count, 2)
+        except TypeError:
+            return
 
     @property
     def price_per_second(self) -> float:
-        self.price / self.duration
+        try:
+            return round(self.price / self.duration, 2)
+        except TypeError:
+            return
 
     @property
     def price_per_nem(self) -> float:
-        self.price / self.nem
+        try:
+            return round(self.price / self.nem, 2)
+        except TypeError:
+            return
 
     def _property_values(self, field_name: str) -> Iterator[any]:
         for product in Product.select():
@@ -161,6 +179,7 @@ class Product(BaseModel):
             .where(Product.id_ == self.id_)
         )
         return {
+            'id_': self.id_,
             'url': self.url,
             'name': self.name,
             'article_number': self.article_number,
@@ -178,10 +197,16 @@ class Product(BaseModel):
             'availability': self.availability,
             'rating': self.rating,
             'rated': self.rated,
-            'tags': [t.name for t in tags]
+            'tags': [t.name for t in tags],
+            'nem_per_second': self.nem_per_second,
+            'nem_per_shot': self.nem_per_shot,
+            'shots_per_second': self.shots_per_second,
+            'price_per_shot': self.price_per_shot,
+            'price_per_second': self.price_per_second,
+            'price_per_nem': self.price_per_nem
         }
 
-    def update(self, key: str, value: any):
+    def update_field(self, key: str, value: any):
         if key == 'tags':
             ...  # TODO
         elif hasattr(self, key):
