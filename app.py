@@ -69,7 +69,7 @@ def route_product_update(pid: str):
         return "No such product!", 404
     else:
         for key, value in request.json:
-            product.update(key, value)
+            product.update_field(key, value)
         product.save(force_insert=False)
 
 
