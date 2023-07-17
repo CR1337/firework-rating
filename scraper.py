@@ -240,8 +240,6 @@ class Scraper:
         process_count = self.CORE_FACTOR * multiprocessing.cpu_count()
         with ThreadPoolExecutor(max_workers=process_count) as executor:
             products = executor.map(self._create_product, product_urls)
-        executor.shutdown(wait=True, cancel_futures=False)
-        # wait(products)
 
         print("Creating plots...")
         for product in products:
