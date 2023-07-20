@@ -2,38 +2,38 @@
     <head>
         <title>{{ product.name }}</title>
     </head>
-    <body>
-        <a href="{{ product.url }}"><h2>{{ product.name }}</h2></a>
+    <body v-scope>
+        <a href="{{ product.url }}" target="_blank"><h2>{{ product.name }}</h2></a>
         <table>
             <tr>
                 <td>
                     {% if product.youtube_handle is not none %}
                         <iframe width="560" height="315" src="https://www.youtube.com/embed/{{ product.youtube_handle }}" frameborder="0" allowfullscreen></iframe>
                     {% else %}
-                        <a href="https://www.youtube.com/results?search_query={{ product.name }}">Youtube Search</a>
+                        <a href="https://www.youtube.com/results?search_query={{ product.name }}" target="_blank">Youtube Search</a>
                     {% endif %}
                 </td>
                 <td>
-                    <input type="radio" name="rating" id="like" {{ "checked" if product.rated and product.rating }}>
-                    <label for="like">Like</label>
+                    <button type="button" @click="like()">Like</button>
+                    <button type="button" @click="dislike()">Dislike</button>
                 </td>
                 <td>
-                    <input type="radio" name="rating" id="dislike" {{ "checked" if product.rated and not product.rating }}>
-                    <label for="dislike">Dislike</label>
-                </td>
-                <td>
-                    <button type="button">Save</button><br>
-                    <button type="button">Next unrated</button>
+                    <button type="button" @click="save()">Save</button><br>
+                    <button type="button" @click="next()">Next unrated</button>
+                    <button type="button" @click="unrate()">Unrate</button>
                 </td>
             </tr>
         </table>
-        <input type="checkbox" id="availability" {{ "checked" if product.availability }}>
+        <input type="checkbox" id="availability" v-model="available" {{ "checked" if product.availability }}>
         <label for="availability">Available</label>
-        <input type="checkbox" id="rated" {{ "checked" if product.rated }}>
-        <label for="rated">Rated</label>
-        <input type="checkbox" id="fan" {{ "checked" if product.fan }}>
+        <input type="checkbox" id="fan" v-model="fan" {{ "checked" if product.fan }}>
         <label for="fan">Fan</label>
         Tags:
+        <select multiple v-model="tags">
+            <option v-for="tag in all_tags">${tag}</option>
+        </select>
+        <input type="text" v-model="new_tag">
+        <button type="button" @click="add_new_tag()">+</button>
 
         <br>
 
@@ -82,7 +82,7 @@
                 {% endif %}
 
                 <td>€/s:</td>
-                <td>{{ product.price_per_second / 100 if product.price_per_second is not none else "N-" }} €/s</td>
+                <td>{{ product.price_per_second if product.price_per_second is not none else "N-" }} €/s</td>
                 {% if product.price_per_second is not none %}
                     <td><img src="../static/product_plots/{{ product.id_ }}_price_per_second.svg"></td>
                 {% else %}
@@ -91,7 +91,7 @@
             </tr>
             <tr>
                 <td>NEM:</td>
-                <td>{{ product.nem / 1000 if product.nem is not none else '-' }} kg</td>
+                <td>{{ product.nem if product.nem is not none else '-' }} kg</td>
                 {% if product.nem is not none %}
                     <td><img src="../static/product_plots/{{ product.id_ }}_nem.svg"></td>
                 {% else %}
@@ -99,7 +99,7 @@
                 {% endif %}
 
                 <td>€/Shot:</td>
-                <td>{{ product.price_per_shot / 100 if product.price_per_shot is not none else "N-" }} €</td>
+                <td>{{ product.price_per_shot if product.price_per_shot is not none else "N-" }} €</td>
                 {% if product.price_per_shot is not none %}
                     <td><img src="../static/product_plots/{{ product.id_ }}_price_per_shot.svg"></td>
                 {% else %}
@@ -116,7 +116,7 @@
                 {% endif %}
 
                 <td>€/NEM:</td>
-                <td>{{ product.price_per_nem / 10 if product.price_per_nem is not none else "-" }} €/kg</td>
+                <td>{{ product.price_per_nem if product.price_per_nem is not none else "-" }} €/kg</td>
                 {% if product.price_per_nem is not none %}
                     <td><img src="../static/product_plots/{{ product.id_ }}_price_per_nem.svg"></td>
                 {% else %}
@@ -145,6 +145,89 @@
             </tr>
         </table>
 
+        <br>
 
+        <a href="/">Main page</a>
+        <a href="overview">Overview</a>
     </body>
 </html>
+
+<script type="module">
+    import { createApp } from 'https://unpkg.com/petite-vue?module'
+
+    createApp({
+        $delimiters: ['${', '}'],
+
+        like() {
+            this.liked = true;
+        },
+
+        dislike() {
+            this.liked = false;
+        },
+
+        add_new_tag() {
+            if (this.all_tags.includes(this.new_tag)) {
+                alert("The tag '" + this.new_tag + "' already exists!");
+                return;
+            };
+            this.all_tags.push(this.new_tag);
+            this.tags.push(this.new_tag);
+            alert(this.all_tags);
+        },
+
+        save() {
+            return fetch(this.pid + "/update", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    'rated': true,
+                    'rating': this.liked,
+                    'fan': this.fan,
+                    'tags': this.tags
+                })
+            }).then((response) => {
+                alert("rated");
+                this.rated = true;
+                return null;
+            }).catch((error) => {
+                alert(error);
+            });
+        },
+
+        next() {
+            this.save();
+            window.location.replace("next-unrated");
+        },
+
+        unrate() {
+            return fetch(this.pid + "/update", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    'rated': false,
+                    'rating': false
+                })
+            }).then((response) => {
+                alert("unrated");
+                this.rated = false;
+                return null;
+            }).catch((error) => {
+                alert(error);
+            });
+        },
+
+        new_tag: "",
+        pid: "{{ product.id_ }}",
+        all_tags: [{% for tag in all_tags %} "{{ tag }}", {% endfor %}],
+        liked: {{ 'null' if product.rating is none else 'true' if product.rating else 'false' }},
+        available: {{ 'true' if product.availability else 'false' }},
+        fan: {{ 'true' if product.fan else 'false' }},
+        tags: [{% for tag in product.tags %} "{{ tag }}", {% endfor %}],
+        rated: {{ 'true' if product.rated else 'false' }}
+    }).mount();
+</script>

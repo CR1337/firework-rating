@@ -5,26 +5,26 @@
     <body>
         <table>
             <tr>
-                <th>Shop Page</th>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Youtube Link</th>
-                <th>Shot Count</th>
-                <th>Duration</th>
-                <th>NEM</th>
-                <th>Rating</th>
-                <th>Rated</th>
-                <th>Tags</th>
+                <th><br>Shop Page</th>
+                <th><a href="overview?sort-by=name">▼</a><a href="overview?sort-by=name&desc=true">▲</a><br>Name</th>
+                <th><a href="overview?sort-by=price">▼</a><a href="overview?sort-by=price&desc=true">▲</a><br>Price</th>
+                <th><br>Youtube Link</th>
+                <th><a href="overview?sort-by=shot_count">▼</a><a href="overview?sort-by=shot_count&desc=true">▲</a><br>Shot Count</th>
+                <th><a href="overview?sort-by=duration">▼</a><a href="overview?sort-by=duration&desc=true">▲</a><br>Duration</th>
+                <th><a href="overview?sort-by=nem">▼</a><a href="overview?sort-by=nem&desc=true">▲</a><br>NEM</th>
+                <th><a href="overview?sort-by=rating">▼</a><a href="overview?sort-by=rating&desc=true">▲</a><br>Rating</th>
+                <th><a href="overview?sort-by=rated">▼</a><a href="overview?sort-by=rated&desc=true">▲</a><br>Rated</th>
+                <th><br>Tags</th>
             </tr>
             {% for product in products %}
             <tr>
-                <td align="left"><a href="{{ product.url }}">Pyroland</a></th>
-                <td align="left"><a href="product/{{ product.id_ }}">{{ product.name }}</a></th>
+                <td align="left"><a href="{{ product.url }}" target="_blank">Pyroland</a></th>
+                <td align="left"><a href="product/{{ product.id_ }}" target="_blank">{{ product.name }}</a></th>
                 <td align="right">{{ product.price / 100 if product.price is not none else 'None' }} €</th>
                 {% if product.youtube_handle is not none %}
-                    <td align="left"><a href="https://youtube.com/watch?v={{ product.youtube_handle }}">Youtube</a></th>
+                    <td align="left"><a href="https://youtube.com/watch?v={{ product.youtube_handle }}" target="_blank">Youtube</a></th>
                 {% else %}
-                    <td align="right"><a href="https://www.youtube.com/results?search_query={{ product.name }}">Search</a></th>
+                    <td align="right"><a href="https://www.youtube.com/results?search_query={{ product.name }}" target="_blank">Search</a></th>
                 {% endif %}
                 <td align="right">{{ product.shot_count }}</th>
                 <td align="right">{{ product.duration }}</th>

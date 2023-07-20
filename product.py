@@ -1,10 +1,11 @@
-from peewee import BooleanField, IntegerField, TextField, ForeignKeyField
-
-from db.base_model import BaseModel
-
-import matplotlib.pyplot as plt
 import os
 from typing import Iterator
+
+import matplotlib.pyplot as plt
+from peewee import (BooleanField, DoesNotExist, ForeignKeyField, IntegerField,
+                    TextField)
+
+from db.base_model import BaseModel
 
 
 class Product(BaseModel):
@@ -24,7 +25,7 @@ class Product(BaseModel):
     nem = IntegerField(null=True)
     availability = BooleanField(default=True)
 
-    rating = BooleanField(default=False)
+    rating = BooleanField(default=None, null=True)
     rated = BooleanField(default=False)
 
     PLOTS_DIRECTORY: str = "static/product_plots"
@@ -77,42 +78,42 @@ class Product(BaseModel):
     @property
     def nem_per_second(self) -> float:
         try:
-            return round(self.nem / self.duration, 2)
+            return round(0.001 * self.nem / self.duration, 3)
         except TypeError:
             return
 
     @property
     def nem_per_shot(self) -> float:
         try:
-            return round(self.nem / self.shot_count, 2)
+            return round(0.001 * self.nem / self.shot_count, 3)
         except TypeError:
             return
 
     @property
     def shots_per_second(self) -> float:
         try:
-            return (self.shot_count / self.duration, 2)
+            return round(self.shot_count / self.duration, 2)
         except TypeError:
             return
 
     @property
     def price_per_shot(self) -> float:
         try:
-            return round(self.price / self.shot_count, 2)
+            return round(0.01 * self.price / self.shot_count, 2)
         except TypeError:
             return
 
     @property
     def price_per_second(self) -> float:
         try:
-            return round(self.price / self.duration, 2)
+            return round(0.01 * self.price / self.duration, 2)
         except TypeError:
             return
 
     @property
     def price_per_nem(self) -> float:
         try:
-            return round(self.price / self.nem, 2)
+            return round(10 * self.price / self.nem, 2)
         except TypeError:
             return
 
@@ -206,9 +207,34 @@ class Product(BaseModel):
             'price_per_nem': self.price_per_nem
         }
 
+    def _update_tags(self, tags: list[str]):
+        my_tags = (
+            Tag.select().join(TagXProduct).join(Product)
+            .where(Product.id_ == self.id_)
+        )
+        for tag_str in tags:
+            try:
+                Tag.get(Tag.name == tag_str)
+            except DoesNotExist:
+                tag = Tag.create(name=tag_str)
+                TagXProduct.create(tag=tag, product=self)
+                continue
+
+            if tag not in my_tags:
+                TagXProduct.create(tag=tag, product=self)
+
+        for tag in my_tags:
+            if tag.name in tags:
+                continue
+            tag_x_product = TagXProduct.get(
+                TagXProduct.tag == tag,
+                TagXProduct.product == self
+            )
+            tag_x_product.delete_instance()
+
     def update_field(self, key: str, value: any):
         if key == 'tags':
-            ...  # TODO
+            self._update_tags(value)
         elif hasattr(self, key):
             setattr(self, key, value)
         else:
@@ -216,7 +242,7 @@ class Product(BaseModel):
 
 
 class Tag(BaseModel):
-    name = TextField
+    name = TextField(unique=True)
 
 
 class TagXProduct(BaseModel):
