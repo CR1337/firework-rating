@@ -1,0 +1,8 @@
+#!/bin/bash
+agent_pids=( )
+
+(exec python3 backend/app.py) & agent_pids+=( "$!" )
+(exec npm run --prefix frontend/ dev) & agent_pids+=( "$!" )
+
+wait "${agent_pids[@]}"
+kill "${agent_pids[@]}"

@@ -3,7 +3,7 @@ from datetime import datetime
 
 from peewee import Field, Model, SqliteDatabase, TextField, DateTimeField
 
-DATABASE_FILENAME: str = "db/db.sqlite3"
+DATABASE_FILENAME: str = "backend/db/db.sqlite3"
 db: SqliteDatabase = SqliteDatabase(DATABASE_FILENAME)
 
 
