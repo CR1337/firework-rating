@@ -1,2 +1,2 @@
 #!/bin/sh
-python3 manage.py db_create
+python3 backend/manage.py db_create

@@ -1,2 +1,2 @@
 #!/bin/sh
-python3 manage.py del_plots
+python3 backend/manage.py del_plots

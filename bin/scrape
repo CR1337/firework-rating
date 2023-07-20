@@ -1,2 +1,2 @@
 #!/bin/sh
-python3 manage.py scrape
+python3 backend/manage.py scrape
