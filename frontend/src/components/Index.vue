@@ -24,6 +24,9 @@ export default {
       overview() {
         window.location.replace("/overview");
       }
+  },
+  created() {
+    document.title = "Fireworks Rating";
   }
 }
 </script>
