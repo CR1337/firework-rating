@@ -1,25 +1,27 @@
 import os
+import re
+from functools import cached_property
+from string import digits
 from typing import Iterator
 
 import matplotlib.pyplot as plt
+from db.base_model import BaseModel
 from peewee import (BooleanField, DoesNotExist, ForeignKeyField, IntegerField,
                     TextField)
-
-from db.base_model import BaseModel
 
 
 class Product(BaseModel):
     url = TextField(unique=True)
     name = TextField()
     article_number = TextField(unique=True)
-    price = IntegerField()
+    price = IntegerField(null=True)
     youtube_handle = TextField(null=True)
     weight = IntegerField(null=True)
     min_caliber = IntegerField(null=True)
     max_caliber = IntegerField(null=True)
     min_height = IntegerField(null=True)
     max_height = IntegerField(null=True)
-    shot_count = IntegerField(null=True)
+    raw_shot_count = IntegerField(null=True)
     duration = IntegerField(null=True)
     fan = BooleanField(default=False)
     nem = IntegerField(null=True)
@@ -28,7 +30,7 @@ class Product(BaseModel):
     rating = BooleanField(default=None, null=True)
     rated = BooleanField(default=False)
 
-    PLOTS_DIRECTORY: str = "static/product_plots"
+    PLOTS_DIRECTORY: str = "backend/static/product_plots"
     LIGHTRED = (1, 0.5, 0.5, 1)
     LIGHTGREEN = (0.5, 1, 0.5, 1)
 
@@ -57,7 +59,7 @@ class Product(BaseModel):
         'max_caliber': False,
         'min_height': False,
         'max_height': False,
-        'shot_count': False,
+        'shot_count': True,
         'duration': False,
         'nem': False,
         'nem_per_second': True,
@@ -67,6 +69,41 @@ class Product(BaseModel):
         'price_per_second': True,
         'price_per_nem': True
     }
+
+    remove_from_name_pattern: re.Pattern = re.compile(
+        r"(?P<to_remove>[0-9]+[\s-]((Schus(s)?)|(Effekte))[\s-].*)"
+    )
+
+    package_multiplier_pattern: re.Pattern = re.compile(
+        r"(?P<multiplier>[0-9]+x)"
+    )
+
+    @cached_property
+    def package_size(self) -> int:
+        n_packages = 1
+        if "er Pack" in self.name:
+            idx = self.name.index("er Pack") - 1
+            n_digits = 1
+            while self.name[idx - 1] in digits:
+                idx -= 1
+                n_digits += 1
+            n_packages = int(self.name[idx:idx + n_digits])
+        matches = self.package_multiplier_pattern.findall(self.name)
+        if len(matches) > 0:
+            multiplier = int(matches[0][0].replace("x", ""))
+            n_packages *= multiplier
+        return n_packages
+
+    @cached_property
+    def shot_count_from_name(self) -> int:
+        if "-Schuss" in self.name:
+            idx = self.name.index("-Schuss") - 1
+            n_digits = 1
+            while self.name[idx - 1] in digits:
+                idx -= 1
+                n_digits += 1
+            return int(self.name[idx:idx + n_digits])
+        return self.raw_shot_count
 
     @property
     def youtube_link(self) -> str:
@@ -78,7 +115,7 @@ class Product(BaseModel):
     @property
     def nem_per_second(self) -> float:
         try:
-            return round(0.001 * self.nem / self.duration, 3)
+            return round(0.001 * self.nem / self.duration / self.package_size, 3)
         except TypeError:
             return
 
@@ -117,6 +154,29 @@ class Product(BaseModel):
         except TypeError:
             return
 
+    @property
+    def shot_count(self) -> int:
+        if (self.raw_shot_count or 0) < self.package_size:
+            if (self.shot_count_from_name or 0) < self.package_size:
+                if self.raw_shot_count is not None:
+                    return self.package_size * self.raw_shot_count
+            else:
+                return self.raw_shot_count
+        if self.raw_shot_count != self.shot_count_from_name:
+            return self.shot_count_from_name
+        return self.raw_shot_count
+
+    @cached_property
+    def short_name(self) -> str:
+        matches = self.remove_from_name_pattern.findall(self.name)
+        if len(matches) == 0:
+            return self.name
+        matches = matches[0]
+        if matches:
+            return self.name.replace(matches[0], "")
+        else:
+            return self.name
+
     def _property_values(self, field_name: str) -> Iterator[any]:
         for product in Product.select():
             try:
@@ -127,6 +187,7 @@ class Product(BaseModel):
                 pass
 
     def _create_plot(self, field_name: str) -> str:
+        print(f"{self.name}: {field_name}")
         if self.IS_PROPERTY[field_name]:
             values = list(self._property_values(field_name))
         else:
@@ -204,7 +265,9 @@ class Product(BaseModel):
             'shots_per_second': self.shots_per_second,
             'price_per_shot': self.price_per_shot,
             'price_per_second': self.price_per_second,
-            'price_per_nem': self.price_per_nem
+            'price_per_nem': self.price_per_nem,
+            'short_name': self.short_name,
+            'package_size': self.package_size
         }
 
     def _update_tags(self, tags: list[str]):
@@ -214,7 +277,7 @@ class Product(BaseModel):
         )
         for tag_str in tags:
             try:
-                Tag.get(Tag.name == tag_str)
+                tag = Tag.get(Tag.name == tag_str)
             except DoesNotExist:
                 tag = Tag.create(name=tag_str)
                 TagXProduct.create(tag=tag, product=self)
