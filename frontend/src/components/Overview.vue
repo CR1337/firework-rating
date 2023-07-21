@@ -1,30 +1,61 @@
+<style>
+table {
+    width: 100%;
+    border: 1px solid black;
+}
+.table-cell {
+    border: 1px solid black;
+}
+.sortable {
+    text-decoration: underline;
+    color: red;
+    cursor: pointer;
+}
+</style>
+
 <template>
     <table>
+        <thead>
         <tr>
-            <th>Shop Page</th>
-            <th @click="sort('name')">Name</th>
-            <th @click="sort('price')">Price</th>
-            <th>Youtube Link</th>
-            <th @click="sort('shout_count')">Shot Count</th>
-            <th @click="sort('duration')">Duration</th>
-            <th @click="sort('nem')">NEM</th>
-            <th @click="sort('rating')">Rating</th>
-            <th @click="sort('rated')">Rated</th>
-            <th>Tags</th>
+            <th class="table-cell">Shop</th>
+            <th class="table-cell">Name</th>
+            <th class="table-cell sortable" @click="sort('price')">Price</th>
+            <th class="table-cell">YT Link</th>
+            <th class="table-cell sortable" @click="sort('shot_count')">Shots</th>
+            <th class="table-cell sortable" @click="sort('duration')">Duration</th>
+            <th class="table-cell sortable" @click="sort('nem')">NEM</th>
+            <th class="table-cell sortable" @click="sort('nem_per_second')">NEM/s</th>
+            <th class="table-cell sortable" @click="sort('nem_per_shot')">NEM/Shot</th>
+            <th class="table-cell sortable" @click="sort('price_per_second')">€/s</th>
+            <th class="table-cell sortable" @click="sort('price_per_shot')">€/Shot</th>
+            <th class="table-cell sortable" @click="sort('price_per_nem')">€/NEM</th>
+            <th class="table-cell sortable" @click="sort('shots_per_second')">Shots/s</th>
+            <th class="table-cell sortable" @click="sort('rating')">Rating</th>
+            <th class="table-cell sortable" @click="sort('rated')">Rated</th>
+            <th class="table-cell">Tags</th>
         </tr>
+        </thead>
+        <tbody>
         <tr v-for="product in sortedProducts">
-            <td align="left"><a :href="product.url" target="_blank">Pyroland</a></td>
-            <td align="right"><a :href="'product/' + product.id_" target="_blank">{{ product.name }}</a></td>
-            <td align="right">{{ (product.price == null) ? '-' : product.price / 100 }} €</td>
-            <td align="right" v-if="product.youtube_handle == null"><a href="https://youtube.com/results?search_query={{ product.name }}" target="_blank">Search</a></td>
-            <td align="lef" v-else><a :href="product.youtube_handle" target="_blank">Youtube</a></td>
-            <td align="right">{{ product.shot_count }}</td>
-            <td align="right">{{ product.duration }}</td>
-            <td align="right">{{ (product.nem == null) ? '-' : product.nem / 1000 }} kg</td>
-            <td align="right">{{ (product.rating == null) ? '-' : product.rating }}</td>
-            <td align="right">{{ product.rated }}</td>
-            <td align="right">{{ product.tags }}</td>
+            <td class="table-cell" align="left"><a :href="product.url" target="_blank">Shop</a></td>
+            <td class="table-cell" align="right"><a :href="'product/' + product.id_" target="_blank">{{ product.short_name }}</a></td>
+            <td class="table-cell" align="right">{{ (product.price == null) ? '-' : product.price / 100 }} €</td>
+            <td class="table-cell" align="right" v-if="product.youtube_handle == null"><a :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Search</a></td>
+            <td class="table-cell" align="right" v-else><a :href="product.youtube_handle" target="_blank">YT</a></td>
+            <td class="table-cell" align="right">{{ (product.shot_count == null) ? '-' : product.shot_count }}</td>
+            <td class="table-cell" align="right">{{ (product.duration == null) ? '-' : product.duration }}</td>
+            <td class="table-cell" align="right">{{ (product.nem == null) ? '-' : product.nem / 1000 }} kg</td>
+            <td class="table-cell" align="right">{{ (product.nem_per_second == null) ? '-' : product.nem_per_second }} kg/s</td>
+            <td class="table-cell" align="right">{{ (product.nem_per_shot == null) ? '-' : product.nem_per_shot }} kg</td>
+            <td class="table-cell" align="right">{{ (product.price_per_second == null) ? '-' : product.price_per_second }} €/s</td>
+            <td class="table-cell" align="right">{{ (product.price_per_shot == null) ? '-' : product.price_per_shot }} €</td>
+            <td class="table-cell" align="right">{{ (product.price_per_nem == null) ? '-' : product.price_per_nem }} €/kg</td>
+            <td class="table-cell" align="right">{{ (product.shots_per_second == null) ? '-' : product.shots_per_second }} Hz</td>
+            <td class="table-cell" align="right">{{ (product.rating == null) ? '-' : product.rating }}</td>
+            <td class="table-cell" align="right">{{ product.rated }}</td>
+            <td class="table-cell" align="right">{{ product.tagsString }}</td>
         </tr>
+        </tbody>
     </table>
 </template>
 
@@ -68,9 +99,13 @@ export default {
                 if(a[this.currentSortKey] > b[this.currentSortKey]) return 1 * modifier;
                 return 0;
             });
+        },
+        tagsString() {
+            return this.tags.join(", ");
         }
     },
     created() {
+        document.title = "Overview";
         this.getProducts();
     }
 }
