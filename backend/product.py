@@ -115,7 +115,9 @@ class Product(BaseModel):
     @property
     def nem_per_second(self) -> float:
         try:
-            return round(0.001 * self.nem / self.duration / self.package_size, 3)
+            return round(
+                0.001 * self.nem / self.duration / self.package_size, 3
+            )
         except TypeError:
             return
 
