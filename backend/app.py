@@ -1,3 +1,4 @@
+from db.base_model import db
 from flask import Flask, request, send_from_directory
 from flask_cors import CORS
 from peewee import DoesNotExist
@@ -61,4 +62,8 @@ def route_static(path):
 
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 5000, debug=True)
+    db.connect()
+    try:
+        app.run("0.0.0.0", 5000, debug=True)
+    except KeyboardInterrupt:
+        db.close()
