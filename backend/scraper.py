@@ -9,7 +9,6 @@ from typing import Callable, Iterator
 import requests
 from bs4 import BeautifulSoup
 from peewee import DoesNotExist
-
 from product import Product
 
 
@@ -69,9 +68,12 @@ class Scraper:
         return product_soup.find('span', {'itemprop': "sku"}).text.strip()
 
     def _product_price(self, product_soup: BeautifulSoup) -> int:
-        strong = product_soup.find('strong', "price text-nowrap")
-        span = strong.find('span')
-        return int("".join(c for c in span.text.strip() if c in digits))
+        try:
+            meta = product_soup.find('meta', {'itemprop': "price"})
+            price_string = meta.get('content')
+            return int(float(price_string) * 100)
+        except Exception:
+            return None
 
     def _product_youtube_handle(self, product_soup: BeautifulSoup) -> str:
         iframe = product_soup.find('iframe', "youtube")
@@ -164,7 +166,10 @@ class Scraper:
         return int(value * 1000)
 
     def _product_availability(self, product_soup: BeautifulSoup) -> bool:
-        return True  # TODO
+        return not any(
+            len(product_soup.body.findAll(string=string)) > 0
+            for string in ("ausverkauft", "Ausverkauft")
+        )
 
     EXTRACTION_METHODS: dict[str, tuple[bool, Callable, int]] = {
         'name': (True, _product_name, -1),
@@ -175,7 +180,7 @@ class Scraper:
         'max_caliber': (False, _product_caliber, 1),
         'min_height': (False, _product_height, 0),
         'max_height': (False, _product_height, 1),
-        'shot_count': (False, _product_shot_count, -1),
+        'raw_shot_count': (False, _product_shot_count, -1),
         'duration': (False, _product_duration, -1),
         'fan': (False, _product_fan, -1),
         'nem': (False, _product_nem, -1),
@@ -237,13 +242,21 @@ class Scraper:
             self._product_urls(soup) for soup in subpage_soups
         ))
 
+        all_products = Product.select()
+
         print("Scraping products...")
         process_count = self.CORE_FACTOR * multiprocessing.cpu_count()
+        process_count = 1
         with ThreadPoolExecutor(max_workers=process_count) as executor:
-            products = executor.map(self._create_product, product_urls)
+            found_products = executor.map(self._create_product, product_urls)
+
+        for product in all_products:
+            if product not in found_products:
+                product.availability = False
+                product.save(force_insert=False)
 
         print("Creating plots...")
-        for product in products:
+        for product in all_products:
             product.create_plots()
 
         print(len(product_urls))
