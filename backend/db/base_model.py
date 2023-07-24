@@ -1,7 +1,7 @@
-from uuid import uuid4
 from datetime import datetime
+from uuid import uuid4
 
-from peewee import Field, Model, SqliteDatabase, TextField, DateTimeField
+from peewee import DateTimeField, Field, Model, SqliteDatabase, TextField
 
 DATABASE_FILENAME: str = "backend/db/db.sqlite3"
 db: SqliteDatabase = SqliteDatabase(DATABASE_FILENAME)
