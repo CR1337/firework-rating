@@ -26,6 +26,7 @@ class Product(BaseModel):
     fan = BooleanField(default=False)
     nem = IntegerField(null=True)
     availability = BooleanField(default=True)
+    shot_count_has_multiplier = BooleanField(null=True)
 
     rating = BooleanField(default=None, null=True)
     rated = BooleanField(default=False)
@@ -33,14 +34,15 @@ class Product(BaseModel):
     PLOTS_DIRECTORY: str = "backend/static/product_plots"
     LIGHTRED = (1, 0.5, 0.5, 1)
     LIGHTGREEN = (0.5, 1, 0.5, 1)
+    LIGHTBLUE = (0.5, 0.5, 1, 1)
 
     FIELDS_TO_COLORS = {
         'price': LIGHTRED,
         'weight': LIGHTGREEN,
-        'min_caliber': LIGHTGREEN,
-        'max_caliber': LIGHTGREEN,
-        'min_height': LIGHTGREEN,
-        'max_height': LIGHTGREEN,
+        'min_caliber': LIGHTBLUE,
+        'max_caliber': LIGHTBLUE,
+        'min_height': LIGHTBLUE,
+        'max_height': LIGHTBLUE,
         'shot_count': LIGHTGREEN,
         'duration': LIGHTGREEN,
         'nem': LIGHTGREEN,
@@ -74,10 +76,6 @@ class Product(BaseModel):
         r"(?P<to_remove>[0-9]+[\s-]((Schus(s)?)|(Effekte))[\s-].*)"
     )
 
-    package_multiplier_pattern: re.Pattern = re.compile(
-        r"(?P<multiplier>[0-9]+x)"
-    )
-
     @cached_property
     def package_size(self) -> int:
         n_packages = 1
@@ -88,10 +86,6 @@ class Product(BaseModel):
                 idx -= 1
                 n_digits += 1
             n_packages = int(self.name[idx:idx + n_digits])
-        matches = self.package_multiplier_pattern.findall(self.name)
-        if len(matches) > 0:
-            multiplier = int(matches[0][0].replace("x", ""))
-            n_packages *= multiplier
         return n_packages
 
     @cached_property
@@ -158,15 +152,33 @@ class Product(BaseModel):
 
     @property
     def shot_count(self) -> int:
-        if (self.raw_shot_count or 0) < self.package_size:
-            if (self.shot_count_from_name or 0) < self.package_size:
-                if self.raw_shot_count is not None:
-                    return self.package_size * self.raw_shot_count
-            else:
-                return self.raw_shot_count
-        if self.raw_shot_count != self.shot_count_from_name:
-            return self.shot_count_from_name
+        p_size = self.package_size
+        if p_size == 1:
+            return self.raw_shot_count
+        if (
+            (self.raw_shot_count or p_size) < p_size
+            or (self.raw_shot_count or p_size) % p_size != 0
+            or not self.shot_count_has_multiplier and self.raw_shot_count is not None
+        ):
+            return self.raw_shot_count * self.package_size
         return self.raw_shot_count
+        if self.shot_count_from_name is None and self.raw_shot_count is None:
+            return None
+        shot_count = 0
+        if (
+            self.shot_count_from_name is not None
+            and self.raw_shot_count is not None
+        ):
+            shot_count = max(self.shot_count_from_name, self.raw_shot_count)
+        elif self.shot_count_from_name is not None:
+            shot_count = self.shot_count_from_name
+        elif self.raw_shot_count is not None:
+            shot_count = self.raw_shot_count
+        if shot_count < self.package_size:
+            return shot_count * self.package_size
+        if shot_count % self.package_size != 0:
+            return shot_count * self.package_size
+        return shot_count
 
     @cached_property
     def short_name(self) -> str:

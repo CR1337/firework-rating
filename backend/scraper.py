@@ -142,9 +142,29 @@ class Scraper:
     def _product_shot_count(self, product_properties: dict[str, str]) -> int:
         if 'schussanzahl' not in product_properties:
             return None
-        return int("".join(
-            c for c in product_properties['schussanzahl'] if c in digits
-        ))
+        raw = product_properties['schussanzahl']
+        raw = raw.split("und") if "und" in raw else [raw]
+        result = 0
+        for r in raw:
+            r = "".join(c for c in r if c in digits + 'xX*').lower()
+            for s in 'x*':
+                if s in r:
+                    a, b = r.split(s)
+                    result += int(a) * int(b)
+                    break
+            else:
+                result += int(r)
+        return result
+
+    def _product_shot_count_has_multiplier(
+        self, product_properties: dict[str, str]
+    ) -> bool:
+        for s in 'xX*':
+            if s in product_properties['schussanzahl']:
+                return True
+        if "und" in product_properties['schussanzahl']:
+            return True
+        return False
 
     def _product_duration(self, product_properties: dict[str, str]) -> int:
         if 'brenndauer' not in product_properties:
@@ -184,7 +204,10 @@ class Scraper:
         'duration': (False, _product_duration, -1),
         'fan': (False, _product_fan, -1),
         'nem': (False, _product_nem, -1),
-        'availability': (True, _product_availability, -1)
+        'availability': (True, _product_availability, -1),
+        'shot_count_has_multiplier': (
+            False, _product_shot_count_has_multiplier, -1
+        )
     }.items()
 
     def _create_product(self, product_url: str) -> Product:
@@ -246,9 +269,10 @@ class Scraper:
 
         print("Scraping products...")
         process_count = self.CORE_FACTOR * multiprocessing.cpu_count()
-        process_count = 1
+        # process_count = 1
         with ThreadPoolExecutor(max_workers=process_count) as executor:
             found_products = executor.map(self._create_product, product_urls)
+            executor.shutdown(wait=True)
 
         for product in all_products:
             if product not in found_products:
