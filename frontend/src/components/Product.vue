@@ -51,7 +51,7 @@
 </style>
 
 <template>
-    <a :href="product.url" target="_blank"><h3>{{ product.name }}</h3></a>
+    <h3><a :href="product.url" target="_blank">{{ product.name }}</a><b>[{{ product.package_size }}]<template v-if="!saved">*</template></b></h3>
     <div class="container">
         <div class="row first-row">
             <div class="col-sm-6">
@@ -74,11 +74,11 @@
         </div>
         <div class="row second-row">
             <div class="col-sm-2">
-                <input type="checkbox" id="availability" v-model="product.availability" />
+                <input type="checkbox" id="availability" v-model="product.availability" @click="saved=false" />
                 <label for="availability">Available</label>
             </div>
             <div class="col-sm-2">
-                <input type="checkbox" id="fan" v-model="product.fan" />
+                <input type="checkbox" id="fan" v-model="product.fan" @click="saved=false" />
                 <label for="fan">Fan</label>
             </div>
             <div class="col-sm-8">
@@ -227,9 +227,8 @@
         </div>
     </div>
     <br>
+    <button @click="showAllTags()">Tags</button>&nbsp;&nbsp;&nbsp;
     <a href="/">Main Page</a>&nbsp;&nbsp;&nbsp;<a href="/overview">Overview</a>
-    <br>
-    <button @click="showAllTags()">Tags</button>
 
 
 </template>
@@ -238,8 +237,6 @@
 import axios from 'axios';
 import { SmartTagz } from "smart-tagz";
 import "smart-tagz/dist/smart-tagz.css";
-// import { Vue } from 'vue';
-import { toRaw } from 'vue';
 
 export default {
     name: 'Product',
@@ -247,7 +244,8 @@ export default {
         return {
             product: null,
             allTags: [],
-            rating: 'unrated'
+            rating: 'unrated',
+            saved: true
         };
     },
     components: {
@@ -305,6 +303,7 @@ export default {
                     this.product.rating = false;
                     break;
             }
+            this.saved = false;
         },
         save() {
             fetch("http://localhost:5000/product/" + this.product.id_, {
@@ -323,6 +322,7 @@ export default {
                 .catch((error) => {
                     console.error(error);
                 });
+            this.saved = true;
         },
         save_button() {
             this.save();
@@ -346,7 +346,7 @@ export default {
             for (const i of tagsObject) {
                 this.product.tags.push(i.value);
             }
-            alert(this.product.tags)
+            this.saved = false;
         },
         showAllTags() {
             alert(this.allTags.join("\n"))
