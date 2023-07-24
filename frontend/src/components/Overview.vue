@@ -18,7 +18,7 @@ table {
         <thead>
         <tr>
             <th class="table-cell">Shop</th>
-            <th class="table-cell">Name</th>
+            <th class="table-cell sortable" @click="sort('package_size')">Name</th>
             <th class="table-cell sortable" @click="sort('price')">Price</th>
             <th class="table-cell">YT Link</th>
             <th class="table-cell sortable" @click="sort('shot_count')">Shots</th>
@@ -38,7 +38,7 @@ table {
         <tbody>
         <tr v-for="product in sortedProducts">
             <td class="table-cell" align="left"><a :href="product.url" target="_blank">Shop</a></td>
-            <td class="table-cell" align="right"><a :href="'product/' + product.id_" target="_blank">{{ product.short_name }}</a></td>
+            <td class="table-cell" align="right"><a :href="'product/' + product.id_" target="_blank">{{ product.short_name }}</a>[{{ product.package_size }}]</td>
             <td class="table-cell" align="right">{{ (product.price == null) ? '-' : product.price / 100 }} €</td>
             <td class="table-cell" align="right" v-if="product.youtube_handle == null"><a :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Search</a></td>
             <td class="table-cell" align="right" v-else><a :href="product.youtube_handle" target="_blank">YT</a></td>
