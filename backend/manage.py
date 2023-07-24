@@ -6,7 +6,7 @@ from product import Product, Tag, TagXProduct
 from scraper import Scraper
 
 TAGS: list[str] = [
-    'impact', 'intro', 'finale', 'howler'
+    'impact', 'intro', 'finale', 'howler', 'colorful'
 ]
 
 
