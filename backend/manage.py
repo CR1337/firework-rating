@@ -8,6 +8,8 @@ from scraper import Scraper
 TAGS: list[str] = [
     'impact', 'intro', 'finale', 'howler', 'colorful'
 ]
+DB_FILENAME: str = "backend/db/db.sqlite3"
+PLOTS_DIRECTORY: str = "backend/static/product_plots"
 
 
 def db_create():
@@ -19,8 +21,8 @@ def db_create():
 
 
 def db_del():
-    os.remove("backend/db/db.sqlite3")
-    with open("backend/db/db.sqlite3", 'w') as file:
+    os.remove(DB_FILENAME)
+    with open(DB_FILENAME, 'w') as file:
         file.write("")
     del_plots()
 
@@ -31,9 +33,9 @@ def db_recreate():
 
 
 def del_plots():
-    for filename in os.listdir("backend/static/product_plots"):
+    for filename in os.listdir(PLOTS_DIRECTORY):
         full_filename = os.path.join(
-            "backend/static/product_plots", filename
+            PLOTS_DIRECTORY, filename
         )
         os.remove(full_filename)
 

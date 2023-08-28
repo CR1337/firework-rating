@@ -14,31 +14,21 @@ def route_products():
     return [p.to_dict() for p in products], 200
 
 
-@app.route("/tags", methods=['GET'])
-def route_tags():
-    tags = Tag.select()
-    return [tag.name for tag in tags], 200
-
-
 @app.route("/product/<pid>", methods=['GET', 'PATCH'])
 def route_product_data(pid: str):
+    try:
+        product = Product.get(Product.id_ == pid)
+    except DoesNotExist:
+        return {'success': False, 'message': "No such product!"}, 404
+
     if request.method == 'GET':
-        try:
-            product = Product.get(Product.id_ == pid)
-        except DoesNotExist:
-            return "No such product!", 404
-        else:
-            return product.to_dict()
+        return product.to_dict()
+
     elif request.method == 'PATCH':
-        try:
-            product = Product.get(Product.id_ == pid)
-        except DoesNotExist:
-            return {'success': False, 'message': "No such product!"}, 404
-        else:
-            for key, value in request.get_json().items():
-                product.update_field(key, value)
-            product.save(force_insert=False)
-            return {'success': True}
+        for key, value in request.get_json().items():
+            product.update_field(key, value)
+        product.save(force_insert=False)
+        return {'success': True}
 
 
 @app.route("/product/next-unrated", methods=['GET'])
@@ -55,9 +45,14 @@ def route_product_next_unrated():
     return product.to_dict(), 200
 
 
+@app.route("/tags", methods=['GET'])
+def route_tags():
+    tags = Tag.select()
+    return [tag.name for tag in tags], 200
+
+
 @app.route('/static/<path:path>')
 def route_static(path):
-    print(path)
     return send_from_directory('static', path)
 
 

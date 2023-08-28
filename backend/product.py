@@ -10,26 +10,7 @@ from peewee import (BooleanField, DoesNotExist, ForeignKeyField, IntegerField,
                     TextField)
 
 
-class Product(BaseModel):
-    url = TextField(unique=True)
-    name = TextField()
-    article_number = TextField(unique=True)
-    price = IntegerField(null=True)
-    youtube_handle = TextField(null=True)
-    weight = IntegerField(null=True)
-    min_caliber = IntegerField(null=True)
-    max_caliber = IntegerField(null=True)
-    min_height = IntegerField(null=True)
-    max_height = IntegerField(null=True)
-    raw_shot_count = IntegerField(null=True)
-    duration = IntegerField(null=True)
-    fan = BooleanField(default=False)
-    nem = IntegerField(null=True)
-    availability = BooleanField(default=True)
-    shot_count_has_multiplier = BooleanField(null=True)
-
-    rating = BooleanField(default=None, null=True)
-    rated = BooleanField(default=False)
+class ProductPlottingMixin:
 
     PLOTS_DIRECTORY: str = "backend/static/product_plots"
     LIGHTRED = (1, 0.5, 0.5, 1)
@@ -72,125 +53,6 @@ class Product(BaseModel):
         'price_per_nem': True
     }
 
-    remove_from_name_pattern: re.Pattern = re.compile(
-        r"(?P<to_remove>[0-9]+[\s-]((Schus(s)?)|(Effekte))[\s-].*)"
-    )
-
-    @cached_property
-    def package_size(self) -> int:
-        n_packages = 1
-        if "er Pack" in self.name:
-            idx = self.name.index("er Pack") - 1
-            n_digits = 1
-            while self.name[idx - 1] in digits:
-                idx -= 1
-                n_digits += 1
-            n_packages = int(self.name[idx:idx + n_digits])
-        return n_packages
-
-    @cached_property
-    def shot_count_from_name(self) -> int:
-        if "-Schuss" in self.name:
-            idx = self.name.index("-Schuss") - 1
-            n_digits = 1
-            while self.name[idx - 1] in digits:
-                idx -= 1
-                n_digits += 1
-            return int(self.name[idx:idx + n_digits])
-        return self.raw_shot_count
-
-    @property
-    def youtube_link(self) -> str:
-        BASE_URL = "https://youtube.com"
-        if self.youtube_handle is None:
-            return f"{BASE_URL}/404"
-        return f"{BASE_URL}/watch?v={self.youtube_handle}"
-
-    @property
-    def nem_per_second(self) -> float:
-        try:
-            return round(
-                0.001 * self.nem / self.duration / self.package_size, 3
-            )
-        except TypeError:
-            return
-
-    @property
-    def nem_per_shot(self) -> float:
-        try:
-            return round(0.001 * self.nem / self.shot_count, 3)
-        except TypeError:
-            return
-
-    @property
-    def shots_per_second(self) -> float:
-        try:
-            return round(self.shot_count / self.duration, 2)
-        except TypeError:
-            return
-
-    @property
-    def price_per_shot(self) -> float:
-        try:
-            return round(0.01 * self.price / self.shot_count, 2)
-        except TypeError:
-            return
-
-    @property
-    def price_per_second(self) -> float:
-        try:
-            return round(0.01 * self.price / self.duration, 2)
-        except TypeError:
-            return
-
-    @property
-    def price_per_nem(self) -> float:
-        try:
-            return round(10 * self.price / self.nem, 2)
-        except TypeError:
-            return
-
-    @property
-    def shot_count(self) -> int:
-        p_size = self.package_size
-        if p_size == 1:
-            return self.raw_shot_count
-        if (
-            (self.raw_shot_count or p_size) < p_size
-            or (self.raw_shot_count or p_size) % p_size != 0
-            or not self.shot_count_has_multiplier and self.raw_shot_count is not None
-        ):
-            return self.raw_shot_count * self.package_size
-        return self.raw_shot_count
-        if self.shot_count_from_name is None and self.raw_shot_count is None:
-            return None
-        shot_count = 0
-        if (
-            self.shot_count_from_name is not None
-            and self.raw_shot_count is not None
-        ):
-            shot_count = max(self.shot_count_from_name, self.raw_shot_count)
-        elif self.shot_count_from_name is not None:
-            shot_count = self.shot_count_from_name
-        elif self.raw_shot_count is not None:
-            shot_count = self.raw_shot_count
-        if shot_count < self.package_size:
-            return shot_count * self.package_size
-        if shot_count % self.package_size != 0:
-            return shot_count * self.package_size
-        return shot_count
-
-    @cached_property
-    def short_name(self) -> str:
-        matches = self.remove_from_name_pattern.findall(self.name)
-        if len(matches) == 0:
-            return self.name
-        matches = matches[0]
-        if matches:
-            return self.name.replace(matches[0], "")
-        else:
-            return self.name
-
     def _property_values(self, field_name: str) -> Iterator[any]:
         for product in Product.select():
             try:
@@ -202,22 +64,24 @@ class Product(BaseModel):
 
     def _create_plot(self, field_name: str) -> str:
         print(f"{self.name}: {field_name}")
-        if self.IS_PROPERTY[field_name]:
-            values = list(self._property_values(field_name))
-        else:
-            values = [
+
+        values = (
+            list(self._property_values(field_name))
+            if self.IS_PROPERTY[field_name]
+            else [
                 getattr(p, field_name) for p in
                 Product.select()
                 .where(getattr(Product, field_name).is_null(False))
             ]
+        )
+
         fig, ax = plt.subplots()
         fig.set_figwidth(10)
         fig.set_figheight(1)
-        medianprops = {'color': 'black'}
 
         boxplot = ax.boxplot(
             x=values, vert=False, whis=[5, 95], notch=True,
-            medianprops=medianprops, patch_artist=True,
+            medianprops={'color': 'black'}, patch_artist=True,
             showfliers=False,
             widths=[0.99]
         )
@@ -230,14 +94,13 @@ class Product(BaseModel):
         except TypeError:
             return
         ax.legend_ = None
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-        ax.spines['left'].set_visible(False)
+        for pos in ('top', 'right', 'bottom', 'left'):
+            ax.spines[pos].set_visible(False)
         ax.get_xaxis().set_ticks([])
         ax.get_yaxis().set_ticks([])
         filename = os.path.join(
-            self.PLOTS_DIRECTORY, f"{self.id_}_{field_name}.svg"
+            self.PLOTS_DIRECTORY,
+            f"{self.id_}_{field_name}.svg"
         )
         fig.savefig(filename)
         plt.close(fig)
@@ -248,6 +111,9 @@ class Product(BaseModel):
             field_name: self._create_plot(field_name)
             for field_name in self.FIELDS_TO_COLORS
         }
+
+
+class ProductSerializeMixin:
 
     def to_dict(self) -> dict[str, any]:
         tags = (
@@ -316,6 +182,128 @@ class Product(BaseModel):
             setattr(self, key, value)
         else:
             raise KeyError(f"Invalid Key: {key}")
+
+
+class ProductPropertyMixin:
+
+    remove_from_name_pattern: re.Pattern = re.compile(
+        r"(?P<to_remove>[0-9]+[\s-]((Schus(s)?)|(Effekte))[\s-].*)"
+    )
+
+    @cached_property
+    def package_size(self) -> int:
+        n_packages = 1
+        if "er Pack" in self.name:
+            idx = self.name.index("er Pack") - 1
+            n_digits = 1
+            while self.name[idx - 1] in digits:
+                idx -= 1
+                n_digits += 1
+            n_packages = int(self.name[idx:idx + n_digits])
+        return n_packages
+
+    @property
+    def youtube_link(self) -> str:
+        BASE_URL = "https://youtube.com"
+        if self.youtube_handle is None:
+            return f"{BASE_URL}/404"
+        return f"{BASE_URL}/watch?v={self.youtube_handle}"
+
+    @property
+    def nem_per_second(self) -> float:
+        try:
+            return round(
+                0.001 * self.nem / self.duration / self.package_size, 3
+            )
+        except TypeError:
+            return
+
+    @property
+    def nem_per_shot(self) -> float:
+        try:
+            return round(0.001 * self.nem / self.shot_count, 3)
+        except TypeError:
+            return
+
+    @property
+    def shots_per_second(self) -> float:
+        try:
+            return round(self.shot_count / self.duration, 2)
+        except TypeError:
+            return
+
+    @property
+    def price_per_shot(self) -> float:
+        try:
+            return round(0.01 * self.price / self.shot_count, 2)
+        except TypeError:
+            return
+
+    @property
+    def price_per_second(self) -> float:
+        try:
+            return round(0.01 * self.price / self.duration, 2)
+        except TypeError:
+            return
+
+    @property
+    def price_per_nem(self) -> float:
+        try:
+            return round(10 * self.price / self.nem, 2)
+        except TypeError:
+            return
+
+    @property
+    def shot_count(self) -> int:
+        p_size = self.package_size
+        if p_size == 1:
+            return self.raw_shot_count
+        if (
+            (self.raw_shot_count or p_size) < p_size
+            or (self.raw_shot_count or p_size) % p_size != 0
+            or (
+                not self.shot_count_has_multiplier
+                and self.raw_shot_count is not None
+            )
+        ):
+            return self.raw_shot_count * self.package_size
+        return self.raw_shot_count
+
+    @cached_property
+    def short_name(self) -> str:
+        matches = self.remove_from_name_pattern.findall(self.name)
+        if len(matches) == 0:
+            return self.name
+        matches = matches[0]
+        if matches:
+            return self.name.replace(matches[0], "")
+        else:
+            return self.name
+
+
+class Product(
+    BaseModel, ProductPlottingMixin,
+    ProductSerializeMixin, ProductPropertyMixin
+):
+    url = TextField(unique=True)
+    name = TextField()
+    article_number = TextField(unique=True)
+    price = IntegerField(null=True)
+    youtube_handle = TextField(null=True)
+    weight = IntegerField(null=True)
+    min_caliber = IntegerField(null=True)
+    max_caliber = IntegerField(null=True)
+    min_height = IntegerField(null=True)
+    max_height = IntegerField(null=True)
+    raw_shot_count = IntegerField(null=True)
+    duration = IntegerField(null=True)
+    fan = BooleanField(default=False)
+    nem = IntegerField(null=True)
+    availability = BooleanField(default=True)
+    shot_count_has_multiplier = BooleanField(null=True)
+
+    rating = BooleanField(default=None, null=True)
+    rated = BooleanField(default=False)
 
 
 class Tag(BaseModel):

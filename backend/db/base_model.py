@@ -15,6 +15,6 @@ class BaseModel(Model):
     created_at = DateTimeField(default=datetime.now)
     updated_at = DateTimeField(default=datetime.now)
 
-    def save(self, force_insert: bool = True, only: list[Field] = None):
+    def save(self, force_insert: bool, only: list[Field] = None):
         self.updated_at = datetime.now()
         super().save(force_insert, only)
