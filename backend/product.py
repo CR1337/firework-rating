@@ -83,8 +83,6 @@ class ProductPlottingMixin:
         return values
 
     def _create_plot(self, field_name: str) -> str:
-        print(f"{self.name}: {field_name}")
-
         values = self._get_values(field_name)
 
         fig, ax = plt.subplots()
@@ -102,9 +100,9 @@ class ProductPlottingMixin:
         if (value := getattr(self, field_name)) is None:
             box_color = self.LIGHTGRAY
         elif self.COLOR_MODE[field_name] == 'low':
-            box_color = self.LIGHTGREEN if value <= median else self.LIGHTRED
+            box_color = self.LIGHTGREEN if value < median else self.LIGHTRED
         elif self.COLOR_MODE[field_name] == 'high':
-            box_color = self.LIGHTGREEN if value >= median else self.LIGHTRED
+            box_color = self.LIGHTGREEN if value > median else self.LIGHTRED
         else:
             box_color = self.LIGHTGRAY
 
