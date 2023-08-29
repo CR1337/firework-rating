@@ -14,6 +14,7 @@ table {
 </style>
 
 <template>
+    <a href="/">Main Page</a>
     <table>
         <thead>
         <tr>
