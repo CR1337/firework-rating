@@ -3,36 +3,58 @@ import re
 from functools import cached_property
 from string import digits
 from typing import Iterator
+import numpy as np
 
 import matplotlib.pyplot as plt
+
 from db.base_model import BaseModel
 from peewee import (BooleanField, DoesNotExist, ForeignKeyField, IntegerField,
                     TextField)
 
 
+class MedianNormalize(plt.Normalize):
+
+    _median: float
+
+    def __init__(self, vmin=None, vmax=None, median=None, clip=False):
+        self._median = median
+        super().__init__(vmin, vmax, clip)
+
+    def __call__(self, value, clip=None):
+        if value < self._median:
+            norm_value = (
+                0.5 * (value - self._vmin) / (self._median - self._vmin)
+            )
+        else:
+            norm_value = (
+                0.5 + 0.5 * (value - self._median)
+                / (self._vmax - self._median)
+            )
+        return np.ma.masked_array(norm_value)
+
+
 class ProductPlottingMixin:
 
     PLOTS_DIRECTORY: str = "backend/static/product_plots"
-    LIGHTRED = (1, 0.5, 0.5, 1)
-    LIGHTGREEN = (0.5, 1, 0.5, 1)
-    LIGHTBLUE = (0.5, 0.5, 1, 1)
+    if not os.path.exists(PLOTS_DIRECTORY):
+        os.makedirs(PLOTS_DIRECTORY)
 
-    FIELDS_TO_COLORS = {
-        'price': LIGHTRED,
-        'weight': LIGHTGREEN,
-        'min_caliber': LIGHTBLUE,
-        'max_caliber': LIGHTBLUE,
-        'min_height': LIGHTBLUE,
-        'max_height': LIGHTBLUE,
-        'shot_count': LIGHTGREEN,
-        'duration': LIGHTGREEN,
-        'nem': LIGHTGREEN,
-        'nem_per_second': LIGHTGREEN,
-        'nem_per_shot': LIGHTGREEN,
-        'shots_per_second': LIGHTGREEN,
-        'price_per_shot': LIGHTRED,
-        'price_per_second': LIGHTRED,
-        'price_per_nem': LIGHTRED
+    COLOR_MODE: dict[str, str] = {
+        'price': 'low',
+        'weight': 'high',
+        'min_caliber': 'neutral',
+        'max_caliber': 'neutral',
+        'min_height': 'neutral',
+        'max_height': 'neutral',
+        'shot_count': 'high',
+        'duration': 'high',
+        'nem': 'high',
+        'nem_per_second': 'high',
+        'nem_per_shot': 'high',
+        'shots_per_second': 'high',
+        'price_per_shot': 'low',
+        'price_per_second': 'low',
+        'price_per_nem': 'low'
     }
 
     IS_PROPERTY: dict[str, bool] = {
@@ -62,10 +84,8 @@ class ProductPlottingMixin:
             except TypeError:
                 pass
 
-    def _create_plot(self, field_name: str) -> str:
-        print(f"{self.name}: {field_name}")
-
-        values = (
+    def _get_values(self, field_name: str) -> np.ndarray:
+        values = np.array(
             list(self._property_values(field_name))
             if self.IS_PROPERTY[field_name]
             else [
@@ -74,21 +94,46 @@ class ProductPlottingMixin:
                 .where(getattr(Product, field_name).is_null(False))
             ]
         )
+        sorted_values = np.sort(values)
+        n = len(sorted_values)
+        percent = 5
+        outliers = int(n * percent / 100)
+        return sorted_values[outliers:n - outliers]
+
+    def _create_plot(self, field_name: str) -> str:
+        print(f"{self.name}: {field_name}")
+
+        values = self._get_values(field_name)
+        value = getattr(self, field_name)
+        if (
+            self.COLOR_MODE[field_name] in ['low', 'high']
+            and value is not None
+        ):
+            median = np.median(values)
+            normalizer = MedianNormalize(values.min(), values.max(), median)
+            color_map = plt.cm.RdYlGn
+            normalized_value = min(max(normalizer(value), 0), 1)
+            if self.COLOR_MODE[field_name] == 'low':
+                normalized_value = 1 - normalized_value
+            box_color = color_map(normalized_value)
+        else:
+            box_color = 'lightgray'
 
         fig, ax = plt.subplots()
         fig.set_figwidth(10)
         fig.set_figheight(1)
 
         boxplot = ax.boxplot(
-            x=values, vert=False, whis=[5, 95], notch=True,
+            x=values, vert=False, whis=[0, 100], notch=True,
             medianprops={'color': 'black'}, patch_artist=True,
             showfliers=False,
             widths=[0.99]
         )
-        boxplot['boxes'][0].set_facecolor(self.FIELDS_TO_COLORS[field_name])
+        # boxplot['boxes'][0].set_facecolor(self.FIELDS_TO_COLORS[field_name])
+        boxplot['boxes'][0].set_facecolor(box_color)
         try:
             ax.axvline(
-                getattr(self, field_name), 0, 1000, color='black',
+                value, 0, 1000, color='black',
                 linewidth=3
             )
         except TypeError:
@@ -109,7 +154,7 @@ class ProductPlottingMixin:
     def create_plots(self) -> dict[str, str]:
         return {
             field_name: self._create_plot(field_name)
-            for field_name in self.FIELDS_TO_COLORS
+            for field_name in self.COLOR_MODE
         }
 
 
