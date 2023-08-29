@@ -12,30 +12,12 @@ from peewee import (BooleanField, DoesNotExist, ForeignKeyField, IntegerField,
                     TextField)
 
 
-class MedianNormalize(plt.Normalize):
-
-    _median: float
-
-    def __init__(self, vmin=None, vmax=None, median=None, clip=False):
-        self._median = median
-        super().__init__(vmin, vmax, clip)
-
-    def __call__(self, value, clip=None):
-        if value < self._median:
-            norm_value = (
-                0.5 * (value - self._vmin) / (self._median - self._vmin)
-            )
-        else:
-            norm_value = (
-                0.5 + 0.5 * (value - self._median)
-                / (self._vmax - self._median)
-            )
-        return np.ma.masked_array(norm_value)
-
-
 class ProductPlottingMixin:
 
     PLOTS_DIRECTORY: str = "backend/static/product_plots"
+    LIGHTGREEN = '#90EE90'
+    LIGHTRED = '#FFC0CB'
+    LIGHTGRAY = '#D3D3D3'
     if not os.path.exists(PLOTS_DIRECTORY):
         os.makedirs(PLOTS_DIRECTORY)
 
@@ -94,42 +76,38 @@ class ProductPlottingMixin:
                 .where(getattr(Product, field_name).is_null(False))
             ]
         )
-        sorted_values = np.sort(values)
-        n = len(sorted_values)
-        percent = 5
-        outliers = int(n * percent / 100)
-        return sorted_values[outliers:n - outliers]
+        # sorted_data = np.sort(values)
+        # n = len(sorted_data)
+        # outliers = int(n * 0.05)
+        # return sorted_data[outliers:n - outliers]
+        return values
 
     def _create_plot(self, field_name: str) -> str:
         print(f"{self.name}: {field_name}")
 
         values = self._get_values(field_name)
-        value = getattr(self, field_name)
-        if (
-            self.COLOR_MODE[field_name] in ['low', 'high']
-            and value is not None
-        ):
-            median = np.median(values)
-            normalizer = MedianNormalize(values.min(), values.max(), median)
-            color_map = plt.cm.RdYlGn
-            normalized_value = min(max(normalizer(value), 0), 1)
-            if self.COLOR_MODE[field_name] == 'low':
-                normalized_value = 1 - normalized_value
-            box_color = color_map(normalized_value)
-        else:
-            box_color = 'lightgray'
 
         fig, ax = plt.subplots()
         fig.set_figwidth(10)
         fig.set_figheight(1)
 
         boxplot = ax.boxplot(
-            x=values, vert=False, whis=[0, 100], notch=True,
+            x=values, vert=False, whis=[5, 95], notch=True,
             medianprops={'color': 'black'}, patch_artist=True,
             showfliers=False,
             widths=[0.99]
         )
-        # boxplot['boxes'][0].set_facecolor(self.FIELDS_TO_COLORS[field_name])
+
+        median = boxplot['medians'][0].get_xdata()[0]
+        if (value := getattr(self, field_name)) is None:
+            box_color = self.LIGHTGRAY
+        elif self.COLOR_MODE[field_name] == 'low':
+            box_color = self.LIGHTGREEN if value <= median else self.LIGHTRED
+        elif self.COLOR_MODE[field_name] == 'high':
+            box_color = self.LIGHTGREEN if value >= median else self.LIGHTRED
+        else:
+            box_color = self.LIGHTGRAY
+
         boxplot['boxes'][0].set_facecolor(box_color)
         try:
             ax.axvline(
