@@ -59,12 +59,12 @@
                 <iframe class="yt-player" v-else :src="'https://www.youtube.com/embed/' + product.youtube_handle" frameborder="0" allowfullscreen></iframe>
             </div>
             <div class="col-sm-4">
-                <label for="liked-radio">Like</label>
-                <input class="rate-button like-button" type="radio" id="liked-radio" v-model="rating" value="liked" v-on:change="rated()" />
                 <label for="disliked-radio">Dislike</label>
                 <input class="rate-button dislike-button"  type="radio" id="unliked-radio" v-model="rating" value="disliked" v-on:change="rated()" />
                 <label for="unrated-radio">Unrated</label>
                 <input class="rate-button unrated-button" type="radio" id="unrated-radio" v-model="rating" value="unrated" v-on:change="rated()" />
+                <label for="liked-radio">Like</label>
+                <input class="rate-button like-button" type="radio" id="liked-radio" v-model="rating" value="liked" v-on:change="rated()" />
             </div>
             <div class="col-sm-2">
                 <button class="save-button" type="button" @click="save_button()">Save</button>
@@ -318,10 +318,12 @@ export default {
                     rated: this.product.rated,
                     rating: this.product.rating
                 })
+            }).then((res) => {
+                console.log(res);
             })
-                .catch((error) => {
-                    console.error(error);
-                });
+            .catch((error) => {
+                console.error(error);
+            });
             this.saved = true;
         },
         save_button() {
@@ -329,10 +331,10 @@ export default {
             alert("Saved!");
         },
         next() {
+            this.save();
             const path = "http://localhost:5000/product/next-unrated?excluded=" + this.product.id_;
             axios.get(path)
                 .then((res) => {
-                    this.save();
                     let nextProduct = res.data;
                     window.location.replace("/product/" + nextProduct.id_);
                 })
