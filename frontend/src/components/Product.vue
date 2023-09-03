@@ -56,7 +56,8 @@
         <div class="row first-row">
             <div class="col-sm-6">
                 <a v-if="product.youtube_handle == null" :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Youtube Search</a>
-                <iframe class="yt-player" v-else :src="'https://www.youtube.com/embed/' + product.youtube_handle" frameborder="0" allowfullscreen></iframe>
+                <!-- <iframe class="yt-player" :width="videoWidth" :height="videoHeight" v-else :src="'https://www.youtube.com/embed/' + product.youtube_handle" frameborder="0" allowfullscreen></iframe> -->
+                <a v-else :href="'https://youtube.com/watch?v=' + product.youtube_handle + '&vq=hd2160'" target="_blank">Youtube Video</a>
             </div>
             <div class="col-sm-4">
                 <label for="disliked-radio">Dislike</label>
