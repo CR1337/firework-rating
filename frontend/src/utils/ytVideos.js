@@ -6,8 +6,15 @@ export function getVideoIdFromUrl(urlStream) {
     return (match && match[6].length === 11) ? match[6] : null;
 }
 
-export async function getBestUrl(id, host = 'localhost', port = 5624) {
+function extractMimeType(mimeTypeText) {
+    const mimeTypeMatch = mimeTypeText.match(/^[^;]+/);
+    return mimeTypeMatch ? mimeTypeMatch[0] : "video/webm";
+}
+
+export async function getYtVideo(id, host = 'localhost', port = 5624) {
     const url = `http://${host}:${port}/?id=${id}`;
+    let ytVideoData = {};
+
     return axios.get(url)
         .then((res) => {
             const responseData = res.data;
@@ -22,15 +29,25 @@ export async function getBestUrl(id, host = 'localhost', port = 5624) {
 
             const streamingData = playerResponse.streamingData;
             const allFormats = [...streamingData.formats, ...streamingData.adaptiveFormats];
+            
+            const videoFormats = allFormats.filter(format => format.mimeType.startsWith("video/"));
+            const audioFormats = allFormats.filter(format => format.mimeType.startsWith("audio/"));
 
-            allFormats.sort((a, b) => {
+            videoFormats.sort((a, b) => {
                 if (a.width === b.width) {
                     return b.bitrate - a.bitrate;
                 }
                 return b.width - a.width;
             });
-
-            return allFormats[0].url;
+            
+            audioFormats.sort((a, b) =>{
+                return b.bitrate - a.bitrate;
+            })
+            
+            ytVideoData.videoUrl = videoFormats[0].url;
+            ytVideoData.mimeType = extractMimeType(videoFormats[0].mimeType);
+            ytVideoData.audioUrl = audioFormats[0].url;
+            return ytVideoData;
         }).catch((error) => {
             console.error(error.message || "Error fetching video data.");
         });
