@@ -60,11 +60,12 @@
                 </div>
                 <div v-else>
                     <video
+                        ref="myVideo"
                         id="my-video"
                         class="video-js"
                         controls
                         preload="auto"
-                        data-setup="{'fluid': true}"
+                        data-setup='{"fluid": true}'
                         style="width:100%; height:100%"
                         :src="productVideoData.videoUrl"
                         :type="productVideoData.mimeType"
@@ -260,8 +261,31 @@ export default {
             allTags: [],
             rating: 'unrated',
             saved: true,
-            productVideoData: { videoUrl: "", mimeType: "", audioUrl: "" }
+            productVideoData: { videoUrl: "", mimeType: "", audioUrl: "" },
+            audioElement: new Audio(),
         };
+    },
+    watch: {
+        'productVideoData.audioUrl': function(newUrl) {
+            if (newUrl) {
+                this.audioElement.src = newUrl;
+            }
+        }
+    },
+    mounted() {
+        this.$nextTick(() => {
+            const player = videojs(document.getElementById('my-video'));
+      
+            player.on('play', () => {
+                this.handleVideoPlay();
+            });
+            player.on('pause', () => {
+                this.handleVideoPause();
+            });
+            player.on('timeupdate', () => {
+                this.syncAudioTimestamp(player.currentTime());
+            });
+        });
     },
     components: {
         SmartTagz
@@ -373,7 +397,20 @@ export default {
         },
         showAllTags() {
             alert(this.allTags.join("\n"))
-        }
+        },
+        handleVideoPlay() {
+            if (this.audioElement) {
+                this.audioElement.play();
+            }
+        },
+        handleVideoPause() {
+            if (this.audioElement) {
+                this.audioElement.pause();
+            }
+        },
+        syncAudioTimestamp(currentTime) {
+            this.audioElement.currentTime = currentTime;
+        },
     },
     created() {
         this.initialize();
