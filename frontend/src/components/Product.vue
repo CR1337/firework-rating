@@ -48,11 +48,21 @@
     h3 {
         text-align: center;
     }
+
+    .loading-screen {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        background-color: #f4f4f4;
+    }
 </style>
 
 <template>
-    <h3><a :href="product.url" target="_blank">{{ product.name }}</a><b>[{{ product.package_size }}]<template v-if="!saved">*</template></b></h3>
-    <div class="container">
+    <div class="container" v-if="product">
+        <h3><a :href="product.url" target="_blank">{{ product.name }}</a><b>[{{ product.package_size }}]<template v-if="!saved">*</template></b></h3>
         <div class="row first-row">
             <div class="col-sm-6">
                 <a v-if="product.youtube_handle == null" :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Youtube Search</a>
@@ -225,6 +235,16 @@
                     - Hz
                 </template>
             </div>
+        </div>
+    </div>
+    <div v-else>
+        <div class="loading-screen">
+            <h2 style="color: #333;">Loading Product...</h2>
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width: 100px; height: 100px; background: #f4f4f4; display: block; shape-rendering: auto;" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+                <path d="M10 50A40 40 0 0 0 90 50A40 42 0 0 1 10 50" fill="#0d6efd" stroke="none">
+                    <animateTransform attributeName="transform" type="rotate" dur="1.5384615384615383s" repeatCount="indefinite" keyTimes="0;1" values="0 50 51;360 50 51"></animateTransform>
+                </path>
+            </svg>
         </div>
     </div>
     <br>
