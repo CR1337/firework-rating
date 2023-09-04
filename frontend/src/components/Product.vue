@@ -65,11 +65,10 @@
                         controls
                         preload="auto"
                         data-setup="{'fluid': true}"
-                        :src="ytVideoUrl"
                         style="width:100%; height:100%"
-                    >
-
-                    </video>
+                        :src="productVideoData.videoUrl"
+                        :type="productVideoData.mimeType"
+                    ></video>
                 </div>
             </div>
             <div class="col-sm-4">
@@ -261,7 +260,7 @@ export default {
             allTags: [],
             rating: 'unrated',
             saved: true,
-            ytVideoUrl: ''
+            productVideoData: { videoUrl: "", mimeType: "", audioUrl: "" }
         };
     },
     components: {
@@ -292,8 +291,8 @@ export default {
                     if (this.product.youtube_handle == null) {
                         this.youtube_search_handle = this.get_youtube_search_handle();
                     } else {
-                        ytVideos.getBestUrl(this.product.youtube_handle).then(result => {
-                            this.ytVideoUrl = result;
+                        ytVideos.getYtVideo(this.product.youtube_handle).then(result => {
+                            this.productVideoData = result;
                         }).catch(error => {
                             console.error(error);
                         });
