@@ -10,6 +10,8 @@ import requests
 from bs4 import BeautifulSoup
 from peewee import DoesNotExist
 from product import Product
+import re
+from math import ceil
 
 
 class ProductProperties:
@@ -29,7 +31,7 @@ class ProductProperties:
         )
         for tr in trs:
             try:
-                key = tr.find('td', "attr-label word-break").text.strip()
+                key = tr.find('td', "h6").text.strip()
                 key = key.replace(":", "").strip().lower().replace("ß", "ss")
                 key = key.replace("ä", "ae").replace("ö", "oe")
                 key = key.replace("ü", "ue").split()[0]
@@ -108,7 +110,7 @@ class ProductProperties:
         return int(value * 1000)
 
     def name(self) -> str:
-        return self._soup.find('h1', "fn product-title").text.strip()
+        return self._soup.find('h1', "product-title h2").text.strip()
 
     def article_number(self) -> str:
         return self._soup.find('span', {'itemprop': "sku"}).text.strip()
@@ -123,12 +125,12 @@ class ProductProperties:
 
     def youtube_handle(self) -> str:
         iframe = self._soup.find('iframe', "youtube")
-        url = iframe.get('data-src')
+        url = iframe.get('src')
         return url.split("/")[-1].split("?")[0]
 
     def weight(self) -> int:
         td = self._soup.find(
-            'td', "attr-value weight-unit weight-unit-article"
+            'td', "weight-unit"
         )
         span = td.find('span', {'itemprop': "value"})
         value = float("".join(
@@ -164,6 +166,7 @@ class Scraper:
 
     THREADS_PER_CORE: int = 3
     BASE_URL: str = "https://pyroland.de"
+    PRODUCTS_PER_PAGE: int = 50
     MAIN_PAGE_URLS: list[str] = [
         "/".join([BASE_URL, "Feuerwerkbatterien"]),
         "/".join([BASE_URL, "Verbundfeuerwerk"])
@@ -193,19 +196,39 @@ class Scraper:
                 return BeautifulSoup(response.content, 'html.parser')
 
     def _page_count(self, soup: BeautifulSoup) -> int:
-        li = soup.find('li', "pages")
-        span = next(li.children)
-        return int(span.text.strip().split("/")[-1].strip())
+        # li = soup.find('li', "pages")
+        # span = next(li.children)
+        # return int(span.text.strip().split("/")[-1].strip())
+        div = soup.find(
+            'div',
+            "col productlist-item-info productlist-item-border col-auto"
+        )
+        text = div.text.strip()
+        matches = re.findall(
+            r"Artikel\s*(?P<first_index>[1-9][0-9]*)\s*-\s*"
+            r"(?P<last_index>[1-9][0-9]*)\s*von\s*"
+            r"(?P<amount>[1-9][0-9]*)",
+            text
+        )
+        first_index, last_index, amount = matches[0]
+        return int(ceil(
+            int(amount) / (int(last_index) - int(first_index) + 1)
+        ))
 
     def _subpage_urls(self, index: int, page_count: int) -> Iterator[str]:
         return (
             f"{self.MAIN_PAGE_URLS[index]}_s{i + 1}"
+            f"?af={self.PRODUCTS_PER_PAGE}"
             for i in range(page_count)
         )
 
     def _product_urls(self, subpage_soup: BeautifulSoup) -> Iterator[str]:
-        a_s = subpage_soup.find_all('a', "image-wrapper")
-        return (f"{self.BASE_URL}/{a.get('href')}" for a in a_s)
+        divs = subpage_soup.find_all(
+            'div',
+            "productbox-images list-gallery"
+        )
+        a_s = (div.find('a') for div in divs)
+        return (a.get('href') for a in a_s)
 
     def _create_product(self, product_url: str) -> Product:
         soup = self._request_soup(product_url)
@@ -247,20 +270,20 @@ class Scraper:
             with self._db_lock:
                 product.save(force_insert=not exists)
 
-        print(product_url)
         return product
 
     def scrape(self):
         print("Scraping product urls...")
         main_page_soups = (
-            self._request_soup(url) for url in self.MAIN_PAGE_URLS
+            self._request_soup(f"{url}?af={self.PRODUCTS_PER_PAGE}")
+            for url in self.MAIN_PAGE_URLS
         )
         page_counts = (
             self._page_count(soup) for soup in main_page_soups
         )
-        subpage_urls = chain.from_iterable(
+        subpage_urls = (chain.from_iterable(
             self._subpage_urls(i, pc) for i, pc in enumerate(page_counts)
-        )
+        ))
         subpage_soups = (
             self._request_soup(url) for url in subpage_urls
         )
@@ -275,11 +298,14 @@ class Scraper:
         if threaded:
             process_count = self.THREADS_PER_CORE * multiprocessing.cpu_count()
             with ThreadPoolExecutor(max_workers=process_count) as executor:
-                found_products = executor.map(self._create_product, product_urls)
+                found_products = executor.map(
+                    self._create_product, product_urls
+                )
                 executor.shutdown(wait=True)
         else:
             found_products = []
-            for url in product_urls:
+            for idx, url in enumerate(product_urls):
+                print(f"{idx + 1}/{len(product_urls)}: {url}")
                 found_products.append(self._create_product(url))
 
         for product in all_products:
@@ -287,7 +313,7 @@ class Scraper:
                 product.availability = False
                 product.save(force_insert=False)
 
-        # print(len(all_products))
+        print(len(all_products))
 
 
 if __name__ == "__main__":

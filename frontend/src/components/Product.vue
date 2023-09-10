@@ -48,23 +48,34 @@
     h3 {
         text-align: center;
     }
+
+    .loading-screen {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        background-color: #f4f4f4;
+    }
 </style>
 
 <template>
-    <h3><a :href="product.url" target="_blank">{{ product.name }}</a><b>[{{ product.package_size }}]<template v-if="!saved">*</template></b></h3>
-    <div class="container">
+    <div class="container" v-if="product">
+        <h3><a :href="product.url" target="_blank">{{ product.name }}</a><b>[{{ product.package_size }}]<template v-if="!saved">*</template></b></h3>
         <div class="row first-row">
             <div class="col-sm-6">
                 <a v-if="product.youtube_handle == null" :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Youtube Search</a>
-                <iframe class="yt-player" v-else :src="'https://www.youtube.com/embed/' + product.youtube_handle" frameborder="0" allowfullscreen></iframe>
+                <!-- <iframe class="yt-player" :width="videoWidth" :height="videoHeight" v-else :src="'https://www.youtube.com/embed/' + product.youtube_handle" frameborder="0" allowfullscreen></iframe> -->
+                <a v-else :href="'https://youtube.com/watch?v=' + product.youtube_handle + '&vq=hd2160'" target="_blank">Youtube Video</a>
             </div>
             <div class="col-sm-4">
-                <label for="liked-radio">Like</label>
-                <input class="rate-button like-button" type="radio" id="liked-radio" v-model="rating" value="liked" v-on:change="rated()" />
                 <label for="disliked-radio">Dislike</label>
                 <input class="rate-button dislike-button"  type="radio" id="unliked-radio" v-model="rating" value="disliked" v-on:change="rated()" />
                 <label for="unrated-radio">Unrated</label>
                 <input class="rate-button unrated-button" type="radio" id="unrated-radio" v-model="rating" value="unrated" v-on:change="rated()" />
+                <label for="liked-radio">Like</label>
+                <input class="rate-button like-button" type="radio" id="liked-radio" v-model="rating" value="liked" v-on:change="rated()" />
             </div>
             <div class="col-sm-2">
                 <button class="save-button" type="button" @click="save_button()">Save</button>
@@ -226,6 +237,16 @@
             </div>
         </div>
     </div>
+    <div v-else>
+        <div class="loading-screen">
+            <h2 style="color: #333;">Loading Product...</h2>
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width: 100px; height: 100px; background: #f4f4f4; display: block; shape-rendering: auto;" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+                <path d="M10 50A40 40 0 0 0 90 50A40 42 0 0 1 10 50" fill="#0d6efd" stroke="none">
+                    <animateTransform attributeName="transform" type="rotate" dur="1.5384615384615383s" repeatCount="indefinite" keyTimes="0;1" values="0 50 51;360 50 51"></animateTransform>
+                </path>
+            </svg>
+        </div>
+    </div>
     <br>
     <button @click="showAllTags()">Tags</button>&nbsp;&nbsp;&nbsp;
     <a href="/">Main Page</a>&nbsp;&nbsp;&nbsp;<a href="/overview">Overview</a>
@@ -318,10 +339,12 @@ export default {
                     rated: this.product.rated,
                     rating: this.product.rating
                 })
+            }).then((res) => {
+                console.log(res);
             })
-                .catch((error) => {
-                    console.error(error);
-                });
+            .catch((error) => {
+                console.error(error);
+            });
             this.saved = true;
         },
         save_button() {
@@ -329,10 +352,10 @@ export default {
             alert("Saved!");
         },
         next() {
+            this.save();
             const path = "http://localhost:5000/product/next-unrated?excluded=" + this.product.id_;
             axios.get(path)
                 .then((res) => {
-                    this.save();
                     let nextProduct = res.data;
                     window.location.replace("/product/" + nextProduct.id_);
                 })

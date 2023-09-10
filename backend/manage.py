@@ -42,7 +42,8 @@ def del_plots():
 
 def create_plots():
     products = Product.select()
-    for p in products:
+    for idx, p in enumerate(products):
+        print(f"{idx + 1}/{len(products)}: {p.name}")
         p.create_plots()
 
 

@@ -3,8 +3,10 @@ import re
 from functools import cached_property
 from string import digits
 from typing import Iterator
+import numpy as np
 
 import matplotlib.pyplot as plt
+
 from db.base_model import BaseModel
 from peewee import (BooleanField, DoesNotExist, ForeignKeyField, IntegerField,
                     TextField)
@@ -13,26 +15,28 @@ from peewee import (BooleanField, DoesNotExist, ForeignKeyField, IntegerField,
 class ProductPlottingMixin:
 
     PLOTS_DIRECTORY: str = "backend/static/product_plots"
-    LIGHTRED = (1, 0.5, 0.5, 1)
-    LIGHTGREEN = (0.5, 1, 0.5, 1)
-    LIGHTBLUE = (0.5, 0.5, 1, 1)
+    LIGHTGREEN = '#90EE90'
+    LIGHTRED = '#FFC0CB'
+    LIGHTGRAY = '#D3D3D3'
+    if not os.path.exists(PLOTS_DIRECTORY):
+        os.makedirs(PLOTS_DIRECTORY)
 
-    FIELDS_TO_COLORS = {
-        'price': LIGHTRED,
-        'weight': LIGHTGREEN,
-        'min_caliber': LIGHTBLUE,
-        'max_caliber': LIGHTBLUE,
-        'min_height': LIGHTBLUE,
-        'max_height': LIGHTBLUE,
-        'shot_count': LIGHTGREEN,
-        'duration': LIGHTGREEN,
-        'nem': LIGHTGREEN,
-        'nem_per_second': LIGHTGREEN,
-        'nem_per_shot': LIGHTGREEN,
-        'shots_per_second': LIGHTGREEN,
-        'price_per_shot': LIGHTRED,
-        'price_per_second': LIGHTRED,
-        'price_per_nem': LIGHTRED
+    COLOR_MODE: dict[str, str] = {
+        'price': 'low',
+        'weight': 'high',
+        'min_caliber': 'neutral',
+        'max_caliber': 'neutral',
+        'min_height': 'neutral',
+        'max_height': 'neutral',
+        'shot_count': 'high',
+        'duration': 'high',
+        'nem': 'high',
+        'nem_per_second': 'high',
+        'nem_per_shot': 'high',
+        'shots_per_second': 'high',
+        'price_per_shot': 'low',
+        'price_per_second': 'low',
+        'price_per_nem': 'low'
     }
 
     IS_PROPERTY: dict[str, bool] = {
@@ -62,10 +66,8 @@ class ProductPlottingMixin:
             except TypeError:
                 pass
 
-    def _create_plot(self, field_name: str) -> str:
-        print(f"{self.name}: {field_name}")
-
-        values = (
+    def _get_values(self, field_name: str) -> np.ndarray:
+        values = np.array(
             list(self._property_values(field_name))
             if self.IS_PROPERTY[field_name]
             else [
@@ -74,6 +76,14 @@ class ProductPlottingMixin:
                 .where(getattr(Product, field_name).is_null(False))
             ]
         )
+        # sorted_data = np.sort(values)
+        # n = len(sorted_data)
+        # outliers = int(n * 0.05)
+        # return sorted_data[outliers:n - outliers]
+        return values
+
+    def _create_plot(self, field_name: str) -> str:
+        values = self._get_values(field_name)
 
         fig, ax = plt.subplots()
         fig.set_figwidth(10)
@@ -85,10 +95,21 @@ class ProductPlottingMixin:
             showfliers=False,
             widths=[0.99]
         )
-        boxplot['boxes'][0].set_facecolor(self.FIELDS_TO_COLORS[field_name])
+
+        median = boxplot['medians'][0].get_xdata()[0]
+        if (value := getattr(self, field_name)) is None:
+            box_color = self.LIGHTGRAY
+        elif self.COLOR_MODE[field_name] == 'low':
+            box_color = self.LIGHTGREEN if value < median else self.LIGHTRED
+        elif self.COLOR_MODE[field_name] == 'high':
+            box_color = self.LIGHTGREEN if value > median else self.LIGHTRED
+        else:
+            box_color = self.LIGHTGRAY
+
+        boxplot['boxes'][0].set_facecolor(box_color)
         try:
             ax.axvline(
-                getattr(self, field_name), 0, 1000, color='black',
+                value, 0, 1000, color='black',
                 linewidth=3
             )
         except TypeError:
@@ -109,7 +130,7 @@ class ProductPlottingMixin:
     def create_plots(self) -> dict[str, str]:
         return {
             field_name: self._create_plot(field_name)
-            for field_name in self.FIELDS_TO_COLORS
+            for field_name in self.COLOR_MODE
         }
 
 
