@@ -302,18 +302,57 @@ export default {
         addListener() {
             window.addEventListener('keydown', (e) => {
                 console.log(e.key);
-                if (e.key == ' ') {
-                    this.onPressSpace();
-                } else if (e.key == 'f') {
-                    this.onPressF();
+                switch (e.key) {
+                    case ' ':
+                        this.onPressSpace();
+                        break;
+                    case 'f':
+                        this.onPressF();
+                        break;
+                    case 'd':
+                        this.onPressD();
+                        break;
+                    case 'l':
+                        this.onPressL();
+                        break;
+                    case 's':
+                        this.onPressS();
+                        break;
+                    case 'n':
+                        this.onPressN();
+                        break;
                 }
             });
         },
         onPressF() {
             const player = videojs(document.getElementById('my-video'));
+            player.play();
             player.requestFullscreen();
         },
+        onPressD() {
+            const dislikeRadio = document.getElementById('unliked-radio');
+            this.clickElement(dislikeRadio);            
+        },
+        onPressL() {
+            const likedRadio = document.getElementById('liked-radio');
+            this.clickElement(likedRadio);
+        },
+        onPressS() {
+            this.save_button();
+        },
+        onPressN() {
+            this.next();
+        },
+        clickElement(e) {
+            const clickEvent = new MouseEvent("click", {
+                "view": window,
+                "bubbles": true,
+                "cancelable": false
+            });
+            e.dispatchEvent(clickEvent);
+        },
         onPressSpace() {
+            console.log('gut');
             const player = videojs(document.getElementById('my-video'));
             if (player.paused()) {
                 player.play();
