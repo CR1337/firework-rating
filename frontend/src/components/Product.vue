@@ -51,6 +51,8 @@
 </style>
 
 <template>
+    <input @keyup.f="onPressF" type="hidden">
+    <input @keyup.space="onPressSpace" type="hidden">
     <h3><a :href="product.url" target="_blank">{{ product.name }}</a><b>[{{ product.package_size }}]<template v-if="!saved">*</template></b></h3>
     <div class="container">
         <div class="row first-row">
@@ -275,7 +277,7 @@ export default {
     mounted() {
         this.$nextTick(() => {
             const player = videojs(document.getElementById('my-video'));
-      
+
             player.on('play', () => {
                 this.handleVideoPlay();
             });
@@ -285,6 +287,8 @@ export default {
             player.on('timeupdate', () => {
                 this.syncAudioTimestamp(player.currentTime());
             });
+
+            this.addListener();
         });
     },
     components: {
@@ -294,6 +298,28 @@ export default {
         initialize() {
             this.getAllTags();
             this.getProduct();
+        },
+        addListener() {
+            window.addEventListener('keydown', (e) => {
+                console.log(e.key);
+                if (e.key == ' ') {
+                    this.onPressSpace();
+                } else if (e.key == 'f') {
+                    this.onPressF();
+                }
+            });
+        },
+        onPressF() {
+            const player = videojs(document.getElementById('my-video'));
+            player.requestFullscreen();
+        },
+        onPressSpace() {
+            const player = videojs(document.getElementById('my-video'));
+            if (player.paused()) {
+                player.play();
+            } else {
+                player.pause();
+            }
         },
         getAllTags() {
             const path = "http://localhost:5000/tags";
