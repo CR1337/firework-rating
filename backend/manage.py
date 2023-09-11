@@ -1,9 +1,11 @@
 import os
 import sys
+from multiprocessing import Pool, cpu_count
 
 from db.base_model import db
 from product import Product, Tag, TagXProduct
 from scraper import Scraper
+from temp_directory import TempDirectory
 
 TAGS: list[str] = [
     'impact', 'intro', 'finale', 'howler', 'colorful'
@@ -47,6 +49,25 @@ def create_plots():
         p.create_plots()
 
 
+def _download_video_entrypoint(
+    product_id: str, temp_directory: str, index: int
+):
+    product = Product.get(Product.id_ == product_id)
+    print(product.name)
+    product.download_video(temp_directory, index)
+
+
+def download_videos():
+    pool = Pool(1)#cpu_count())
+    temp_directory = TempDirectory().directory
+    args = [(p.id_, temp_directory, i) for i, p in enumerate(Product.select())]
+    # pool.starmap(_download_video_entrypoint, args)
+    for arg in args:
+        _download_video_entrypoint(*arg)
+    pool.close()
+    pool.join()
+
+
 def scrape():
     scraper = Scraper()
     scraper.scrape()
@@ -66,6 +87,8 @@ def main():
         create_plots()
     elif arg == 'db_recreate':
         db_recreate()
+    elif arg == 'download_videos':
+        download_videos()
 
 
 if __name__ == "__main__":
