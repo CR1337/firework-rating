@@ -48,9 +48,15 @@
     h3 {
         text-align: center;
     }
+    #rating-progress {
+        top: 0;
+        width: 100%;
+        height: 16px;
+    }
 </style>
 
 <template>
+    <progress id="rating-progress" :value="rating_progress" :max="product_count">{{ product_count }} %</progress>
     <input @keyup.f="onPressF" type="hidden">
     <input @keyup.space="onPressSpace" type="hidden">
     <h3><a :href="product.url" target="_blank">{{ product.name }}</a><b>[{{ product.package_size }}]<template v-if="!saved">*</template></b></h3>
@@ -265,6 +271,8 @@ export default {
             saved: true,
             productVideoData: { videoUrl: "", mimeType: "", audioUrl: "" },
             audioElement: new Audio(),
+            rating_progress: 0,
+            product_count: 0
         };
     },
     watch: {
@@ -298,6 +306,7 @@ export default {
         initialize() {
             this.getAllTags();
             this.getProduct();
+            this.getProgressInfo();
         },
         addListener() {
             window.addEventListener('keydown', (e) => {
@@ -331,7 +340,7 @@ export default {
         },
         onPressD() {
             const dislikeRadio = document.getElementById('unliked-radio');
-            this.clickElement(dislikeRadio);            
+            this.clickElement(dislikeRadio);
         },
         onPressL() {
             const likedRadio = document.getElementById('liked-radio');
@@ -369,6 +378,17 @@ export default {
                 .catch((error) => {
                     console.error(error);
                 });
+        },
+        getProgressInfo() {
+            const path = "http://localhost:5000/progress";
+            axios.get(path)
+            .then((res) => {
+                this.rating_progress = res.data.rating_progress;
+                this.product_count = res.data.product_count;
+            })
+            .catch((error) => {
+                console.error(error);
+            });
         },
         getProduct() {
             const id = this.$route.params.id;

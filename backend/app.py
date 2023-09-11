@@ -51,6 +51,17 @@ def route_tags():
     return [tag.name for tag in tags], 200
 
 
+@app.route("/progress", methods=['GET'])
+def route_progress():
+    products = Product.select()
+    product_count = len(products)
+    rated_count = len([p for p in products if p.rated])
+    return {
+        'rating_progress': rated_count,
+        'product_count': product_count
+    }, 200
+
+
 @app.route('/static/<path:path>')
 def route_static(path):
     return send_from_directory('static', path)
