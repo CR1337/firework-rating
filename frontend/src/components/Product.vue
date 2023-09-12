@@ -48,6 +48,9 @@
     h3 {
         text-align: center;
     }
+    .new-tag {
+        color: red;
+    }
 
     .loading-screen {
         display: flex;
@@ -62,7 +65,11 @@
 
 <template>
     <div class="container" v-if="product">
-        <h3><a :href="product.url" target="_blank">{{ product.name }}</a><b>[{{ product.package_size }}]<template v-if="!saved">*</template></b></h3>
+        <h3>
+            <template id="new-tag" v-if="product.is_new">[NEW]</template>
+            <a :href="product.url" target="_blank">{{ product.name }}</a>
+            <b>[{{ product.package_size }}]<template v-if="!saved">*</template></b>
+        </h3>
         <div class="row first-row">
             <div class="col-sm-6">
                 <a v-if="product.youtube_handle == null" :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Youtube Search</a>
