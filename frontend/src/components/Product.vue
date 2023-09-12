@@ -86,7 +86,7 @@
                 </div>
             </div>
             <div class="col-sm-4">
-                <label for="disliked-radio">Dislike</label>
+                <label for="unliked-radio">Dislike</label>
                 <input class="rate-button dislike-button"  type="radio" id="unliked-radio" v-model="rating" value="disliked" v-on:change="rated()" />
                 <label for="unrated-radio">Unrated</label>
                 <input class="rate-button unrated-button" type="radio" id="unrated-radio" v-model="rating" value="unrated" v-on:change="rated()" />
@@ -116,6 +116,7 @@
                     :default-tags="product.tags"
                     :sources="allTags"
                     ref="tagz"
+                    id="tagz"
                     :on-changed="updateTags"
                 />
             </div>
@@ -292,6 +293,61 @@ export default {
         initialize() {
             this.getAllTags();
             this.getProduct();
+            this.registerKeyboardListener();
+        },
+        registerKeyboardListener() {
+            document.addEventListener('keydown', (event) => {
+                if (document.activeElement.tagName.toLowerCase() == "input") {
+                    return;
+                }
+                switch (event.key) {
+                    case 'f':
+                        event.preventDefault();
+                        this.fullscreenAndPlay();
+                        break;
+                    case ' ':
+                        event.preventDefault();
+                        this.togglePlay();
+                        break;
+                    case 'd':
+                        event.preventDefault();
+                        this.clickOn("unliked-radio");
+                        break;
+                    case 'l':
+                        event.preventDefault();
+                        this.clickOn("liked-radio");
+                        break;
+                    case 'u':
+                        event.preventDefault();
+                        this.clickOn("unrated-radio");
+                        break;
+                    case 's':
+                        event.preventDefault();
+                        this.save();
+                        break;
+                    case 'n':
+                        event.preventDefault();
+                        this.next();
+                        break;
+                    case 'q':
+                        event.preventDefault();
+                        this.showAllTags();
+                        break;
+                    case 'a':
+                        event.preventDefault();
+                        this.clickOn("availability");
+                        break;
+                    case 'v':
+                        event.preventDefault();
+                        this.clickOn("fan");
+                        break;
+                    case 't':
+                        event.preventDefault();
+                        const tagsInput = document.querySelectorAll('[placeholder="Add tag..."]')[0];
+                        tagsInput.focus();
+                        break;
+                }
+            });
         },
         getAllTags() {
             const path = "http://localhost:5000/tags";
@@ -389,6 +445,28 @@ export default {
         },
         showAllTags() {
             alert(this.allTags.join("\n"))
+        },
+        fullscreenAndPlay() {
+            const player = document.getElementById("video-player");
+            player.requestFullscreen();
+            player.play();
+        },
+        togglePlay() {
+            const player = document.getElementById("video-player");
+            if (player.paused) {
+                player.play();
+            } else {
+                player.pause();
+            }
+        },
+        clickOn(id) {
+            const clickEvent = new MouseEvent("click", {
+                view: window,
+                bubbles: true,
+                cancelable: false
+            });
+            const button = document.getElementById(id);
+            button.dispatchEvent(clickEvent);
         }
     },
     created() {
