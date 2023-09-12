@@ -1,6 +1,5 @@
 import os
 import sys
-from multiprocessing import Pool, cpu_count
 
 from db.base_model import db
 from product import Product, Tag, TagXProduct
