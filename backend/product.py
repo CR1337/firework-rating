@@ -3,17 +3,14 @@ import re
 from functools import cached_property
 from string import digits
 from typing import Iterator
-import numpy as np
 
+import ffmpeg
 import matplotlib.pyplot as plt
-
+import numpy as np
 from db.base_model import BaseModel
 from peewee import (BooleanField, DoesNotExist, ForeignKeyField, IntegerField,
                     TextField)
-
 from pytube import YouTube
-import ffmpeg
-from proxy_provider import ProxyProvider
 
 
 class ProductVideoMixin:
@@ -29,10 +26,8 @@ class ProductVideoMixin:
         )
         if os.path.exists(output_filename):
             return
-        proxy = ProxyProvider.get_proxy(index)
         youtube = YouTube(
-            f"{self.YOUTUBE_LINK_PREFIX}{self.youtube_handle}",
-            proxies=proxy
+            f"{self.YOUTUBE_LINK_PREFIX}{self.youtube_handle}"
         )
         video_stream = (
             youtube.streams.filter(mime_type='video/mp4')
