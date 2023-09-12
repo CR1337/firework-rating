@@ -18,7 +18,7 @@ class ProductVideoMixin:
     YOUTUBE_LINK_PREFIX: str = "https://www.youtube.com/watch?v="
     OUTPUT_DIRECTORY: str = "backend/static/videos"
 
-    def download_video(self, temp_directory: str, index: int):
+    def download_video(self, temp_directory: str):
         if self.youtube_handle is None or self.youtube_handle == "":
             return
         output_filename = os.path.join(
