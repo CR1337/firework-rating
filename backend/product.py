@@ -158,6 +158,7 @@ class ProductSerializeMixin:
             'fan': self.fan,
             'nem': self.nem,
             'availability': self.availability,
+            'is_new': self.is_new,
             'rating': self.rating,
             'rated': self.rated,
             'tags': [t.name for t in tags],
@@ -322,6 +323,7 @@ class Product(
     nem = IntegerField(null=True)
     availability = BooleanField(default=True)
     shot_count_has_multiplier = BooleanField(null=True)
+    is_new = BooleanField(default=False)
 
     rating = BooleanField(default=None, null=True)
     rated = BooleanField(default=False)
