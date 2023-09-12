@@ -49,23 +49,11 @@ def create_plots():
         p.create_plots()
 
 
-def _download_video_entrypoint(
-    product_id: str, temp_directory: str, index: int
-):
-    product = Product.get(Product.id_ == product_id)
-    print(product.name)
-    product.download_video(temp_directory, index)
-
-
 def download_videos():
-    pool = Pool(1)#cpu_count())
     temp_directory = TempDirectory().directory
-    args = [(p.id_, temp_directory, i) for i, p in enumerate(Product.select())]
-    # pool.starmap(_download_video_entrypoint, args)
-    for arg in args:
-        _download_video_entrypoint(*arg)
-    pool.close()
-    pool.join()
+    for i, product in enumerate(Product.select()):
+        print(f"{i + 1}/{len(Product.select())}: {product.name}")
+        product.download_video(temp_directory, i)
 
 
 def scrape():
