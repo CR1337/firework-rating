@@ -164,3 +164,5 @@ backend/static/product_plots/*
 !backend/static/product_plots/.gitkeep
 
 frontend/node_modules/**
+
+**.mp4
