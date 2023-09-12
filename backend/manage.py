@@ -51,9 +51,10 @@ def create_plots():
 
 def download_videos():
     temp_directory = TempDirectory().directory
+    product_count = len(Product.select())
     for i, product in enumerate(Product.select()):
-        print(f"{i + 1}/{len(Product.select())}: {product.name}")
-        product.download_video(temp_directory, i)
+        print(f"{i + 1}/{product_count}: {product.name}")
+        product.download_video(temp_directory)
 
 
 def scrape():
