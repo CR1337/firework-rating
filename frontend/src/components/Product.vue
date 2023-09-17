@@ -48,6 +48,11 @@
     h3 {
         text-align: center;
     }
+    #rating-progress {
+        top: 0;
+        width: 100%;
+        height: 16px;
+    }
     
     #new-tag {
         color: red;
@@ -70,6 +75,7 @@
 </style>
 
 <template>
+    <progress id="rating-progress" :value="rating_progress" :max="product_count">{{ product_count }} %</progress>
     <div class="container" v-if="product">
         <h3>
             <template v-if="product.is_new"><a id="new-tag">[NEW]</a></template>
@@ -88,6 +94,7 @@
                         controls
                         preload="auto"
                         data-setup='{"fluid": true}'
+                        style="width:100%; height:100%"
                         :src="'http://localhost:5000/static/videos/' + product.id_ + '.mp4'"
                         type="video/mp4"
                     >
@@ -263,16 +270,6 @@
             </div>
         </div>
     </div>
-    <div v-else>
-        <div class="loading-screen">
-            <h2 style="color: #333;">Loading Product...</h2>
-            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width: 100px; height: 100px; background: #f4f4f4; display: block; shape-rendering: auto;" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
-                <path d="M10 50A40 40 0 0 0 90 50A40 42 0 0 1 10 50" fill="#0d6efd" stroke="none">
-                    <animateTransform attributeName="transform" type="rotate" dur="1.5384615384615383s" repeatCount="indefinite" keyTimes="0;1" values="0 50 51;360 50 51"></animateTransform>
-                </path>
-            </svg>
-        </div>
-    </div>
     <br>
     <button @click="showAllTags()">Tags</button>&nbsp;&nbsp;&nbsp;
     <a href="/">Main Page</a>&nbsp;&nbsp;&nbsp;<a href="/overview">Overview</a>
@@ -284,6 +281,7 @@
 import axios from 'axios';
 import { SmartTagz } from "smart-tagz";
 import "smart-tagz/dist/smart-tagz.css";
+import * as ytVideos from '@/utils/ytVideos';
 
 export default {
     name: 'Product',
@@ -292,8 +290,36 @@ export default {
             product: null,
             allTags: [],
             rating: 'unrated',
-            saved: true
+            saved: true,
+            productVideoData: { videoUrl: "", mimeType: "", audioUrl: "" },
+            audioElement: new Audio(),
+            rating_progress: 0,
+            product_count: 0
         };
+    },
+    watch: {
+        'productVideoData.audioUrl': function(newUrl) {
+            if (newUrl) {
+                this.audioElement.src = newUrl;
+            }
+        }
+    },
+    mounted() {
+        this.$nextTick(() => {
+            const player = videojs(document.getElementById('my-video'));
+
+            player.on('play', () => {
+                this.handleVideoPlay();
+            });
+            player.on('pause', () => {
+                this.handleVideoPause();
+            });
+            player.on('timeupdate', () => {
+                this.syncAudioTimestamp(player.currentTime());
+            });
+
+            this.addListener();
+        });
     },
     components: {
         SmartTagz
@@ -302,7 +328,42 @@ export default {
         initialize() {
             this.getAllTags();
             this.getProduct();
-            this.registerKeyboardListener();
+            this.getProgressInfo();
+        },
+        onPressF() {
+            const player = videojs(document.getElementById('my-video'));
+            player.play();
+            player.requestFullscreen();
+        },
+        onPressD() {
+            const dislikeRadio = document.getElementById('unliked-radio');
+            this.clickElement(dislikeRadio);
+        },
+        onPressL() {
+            const likedRadio = document.getElementById('liked-radio');
+            this.clickElement(likedRadio);
+        },
+        onPressS() {
+            this.save_button();
+        },
+        onPressN() {
+            this.next();
+        },
+        clickElement(e) {
+            const clickEvent = new MouseEvent("click", {
+                "view": window,
+                "bubbles": true,
+                "cancelable": false
+            });
+            e.dispatchEvent(clickEvent);
+        },
+        onPressSpace() {
+            const player = videojs(document.getElementById('my-video'));
+            if (player.paused()) {
+                player.play();
+            } else {
+                player.pause();
+            }
         },
         registerKeyboardListener() {
             document.addEventListener('keydown', (event) => {
@@ -368,6 +429,17 @@ export default {
                     console.error(error);
                 });
         },
+        getProgressInfo() {
+            const path = "http://localhost:5000/progress";
+            axios.get(path)
+            .then((res) => {
+                this.rating_progress = res.data.rating_progress;
+                this.product_count = res.data.product_count;
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+        },
         getProduct() {
             const id = this.$route.params.id;
             const path = "http://localhost:5000/product/" + id;
@@ -377,6 +449,12 @@ export default {
                     document.title = this.product.short_name;
                     if (this.product.youtube_handle == null) {
                         this.youtube_search_handle = this.get_youtube_search_handle();
+                    } else {
+                        ytVideos.getYtVideo(this.product.youtube_handle).then(result => {
+                            this.productVideoData = result;
+                        }).catch(error => {
+                            console.error(error);
+                        });
                     }
                     if (this.product.rated) {
                         if (this.product.rating) {
@@ -454,6 +532,19 @@ export default {
         },
         showAllTags() {
             alert(this.allTags.join("\n"))
+        },
+        handleVideoPlay() {
+            if (this.audioElement) {
+                this.audioElement.play();
+            }
+        },
+        handleVideoPause() {
+            if (this.audioElement) {
+                this.audioElement.pause();
+            }
+        },
+        syncAudioTimestamp(currentTime) {
+            this.audioElement.currentTime = currentTime;
         },
         fullscreenAndPlay() {
             const player = document.getElementById("video-player");

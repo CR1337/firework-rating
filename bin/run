@@ -3,6 +3,7 @@ agent_pids=( )
 
 (exec python3 backend/app.py) & agent_pids+=( "$!" )
 (exec npm run --prefix frontend/ dev) & agent_pids+=( "$!" )
+(exec node yt2html5server/index.js) & agent_pids+=( "$!" )
 
 wait "${agent_pids[@]}"
 kill "${agent_pids[@]}"
