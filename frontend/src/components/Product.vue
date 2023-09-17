@@ -48,6 +48,10 @@
     h3 {
         text-align: center;
     }
+    #video-player {
+        width: 100%;
+        height: 100%;
+    }
 
     .loading-screen {
         display: flex;
@@ -65,9 +69,21 @@
         <h3><a :href="product.url" target="_blank">{{ product.name }}</a><b>[{{ product.package_size }}]<template v-if="!saved">*</template></b></h3>
         <div class="row first-row">
             <div class="col-sm-6">
-                <a v-if="product.youtube_handle == null" :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Youtube Search</a>
-                <!-- <iframe class="yt-player" :width="videoWidth" :height="videoHeight" v-else :src="'https://www.youtube.com/embed/' + product.youtube_handle" frameborder="0" allowfullscreen></iframe> -->
-                <a v-else :href="'https://youtube.com/watch?v=' + product.youtube_handle + '&vq=hd2160'" target="_blank">Youtube Video</a>
+                <div v-if="product.youtube_handle == null">
+                    <a v-if="product.youtube_handle == null" :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Youtube Search</a>
+                </div>
+                <div v-else>
+                    <video
+                        id="video-player"
+                        class="video-js"
+                        controls
+                        preload="auto"
+                        data-setup='{"fluid": true}'
+                        :src="'http://localhost:5000/static/videos/' + product.id_ + '.mp4'"
+                        type="video/mp4"
+                    >
+                    </video>
+                </div>
             </div>
             <div class="col-sm-4">
                 <label for="disliked-radio">Dislike</label>
