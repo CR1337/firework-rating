@@ -48,6 +48,11 @@
     h3 {
         text-align: center;
     }
+    
+    #new-tag {
+        color: red;
+    }
+    
     #video-player {
         width: 100%;
         height: 100%;
@@ -66,7 +71,11 @@
 
 <template>
     <div class="container" v-if="product">
-        <h3><a :href="product.url" target="_blank">{{ product.name }}</a><b>[{{ product.package_size }}]<template v-if="!saved">*</template></b></h3>
+        <h3>
+            <template v-if="product.is_new"><a id="new-tag">[NEW]</a></template>
+            <a :href="product.url" target="_blank">{{ product.name }}</a>
+            <b>[{{ product.package_size }}]<template v-if="!saved">*</template></b>
+        </h3>
         <div class="row first-row">
             <div class="col-sm-6">
                 <div v-if="product.youtube_handle == null">

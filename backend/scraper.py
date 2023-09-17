@@ -1,7 +1,9 @@
 import multiprocessing
+import re
 import time
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from itertools import chain
+from math import ceil
 from string import digits
 from threading import Lock
 from typing import Callable, Iterator
@@ -10,8 +12,6 @@ import requests
 from bs4 import BeautifulSoup
 from peewee import DoesNotExist
 from product import Product
-import re
-from math import ceil
 
 
 class ProductProperties:
@@ -144,6 +144,11 @@ class ProductProperties:
             for string in ("ausverkauft", "Ausverkauft")
         )
 
+    def is_new(self) -> bool:
+        div = self._soup.find('div', id='product-offer')
+        badge_div = div.find('div', 'sfx_badge new-badge')
+        return badge_div is not None
+
     EXTRACTION_METHODS: dict[str, tuple[bool, Callable, int]] = {
         'name': name,
         'price': price,
@@ -158,6 +163,7 @@ class ProductProperties:
         'fan': fan,
         'nem': nem,
         'availability': availability,
+        'is_new': is_new,
         'shot_count_has_multiplier': shot_count_has_multiplier
     }.items()
 
