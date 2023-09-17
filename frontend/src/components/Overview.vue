@@ -54,7 +54,7 @@ table {
             <td class="table-cell" align="right">{{ (product.shots_per_second == null) ? '-' : product.shots_per_second }} Hz</td>
             <td class="table-cell" align="right">{{ (product.rating == null) ? '-' : product.rating }}</td>
             <td class="table-cell" align="right">{{ product.rated }}</td>
-            <td class="table-cell" align="right">{{ product.tagsString }}</td>
+            <td class="table-cell" align="right">{{ tagsString(product) }}</td>
         </tr>
         </tbody>
     </table>
@@ -89,6 +89,9 @@ export default {
                 this.currentSortDir = this.currentSortDir === 'asc' ? 'desc' : 'asc';
             }
             this.currentSortKey = key;
+        },
+        tagsString(product) {
+            return product.tags.join(", ");
         }
     },
     computed: {
@@ -100,9 +103,6 @@ export default {
                 if(a[this.currentSortKey] > b[this.currentSortKey]) return 1 * modifier;
                 return 0;
             });
-        },
-        tagsString() {
-            return this.tags.join(", ");
         }
     },
     created() {

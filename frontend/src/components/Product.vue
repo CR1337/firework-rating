@@ -53,35 +53,56 @@
         width: 100%;
         height: 16px;
     }
+    
+    #new-tag {
+        color: red;
+    }
+    
+    #video-player {
+        width: 100%;
+        height: 100%;
+    }
+
+    .loading-screen {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        background-color: #f4f4f4;
+    }
 </style>
 
 <template>
     <progress id="rating-progress" :value="rating_progress" :max="product_count">{{ product_count }} %</progress>
-    <input @keyup.f="onPressF" type="hidden">
-    <input @keyup.space="onPressSpace" type="hidden">
-    <h3><a :href="product.url" target="_blank">{{ product.name }}</a><b>[{{ product.package_size }}]<template v-if="!saved">*</template></b></h3>
-    <div class="container">
+    <div class="container" v-if="product">
+        <h3>
+            <template v-if="product.is_new"><a id="new-tag">[NEW]</a></template>
+            <a :href="product.url" target="_blank">{{ product.name }}</a>
+            <b>[{{ product.package_size }}]<template v-if="!saved">*</template></b>
+        </h3>
         <div class="row first-row">
             <div class="col-sm-6">
                 <div v-if="product.youtube_handle == null">
-                    <a :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Youtube Search</a>
+                    <a v-if="product.youtube_handle == null" :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Youtube Search</a>
                 </div>
                 <div v-else>
                     <video
-                        ref="myVideo"
-                        id="my-video"
+                        id="video-player"
                         class="video-js"
                         controls
                         preload="auto"
                         data-setup='{"fluid": true}'
                         style="width:100%; height:100%"
-                        :src="productVideoData.videoUrl"
-                        :type="productVideoData.mimeType"
-                    ></video>
+                        :src="'http://localhost:5000/static/videos/' + product.id_ + '.mp4'"
+                        type="video/mp4"
+                    >
+                    </video>
                 </div>
             </div>
             <div class="col-sm-4">
-                <label for="disliked-radio">Dislike</label>
+                <label for="unliked-radio">Dislike</label>
                 <input class="rate-button dislike-button"  type="radio" id="unliked-radio" v-model="rating" value="disliked" v-on:change="rated()" />
                 <label for="unrated-radio">Unrated</label>
                 <input class="rate-button unrated-button" type="radio" id="unrated-radio" v-model="rating" value="unrated" v-on:change="rated()" />
@@ -111,6 +132,7 @@
                     :default-tags="product.tags"
                     :sources="allTags"
                     ref="tagz"
+                    id="tagz"
                     :on-changed="updateTags"
                 />
             </div>
@@ -308,31 +330,6 @@ export default {
             this.getProduct();
             this.getProgressInfo();
         },
-        addListener() {
-            window.addEventListener('keydown', (e) => {
-                console.log(e.key);
-                switch (e.key) {
-                    case ' ':
-                        this.onPressSpace();
-                        break;
-                    case 'f':
-                        this.onPressF();
-                        break;
-                    case 'd':
-                        this.onPressD();
-                        break;
-                    case 'l':
-                        this.onPressL();
-                        break;
-                    case 's':
-                        this.onPressS();
-                        break;
-                    case 'n':
-                        this.onPressN();
-                        break;
-                }
-            });
-        },
         onPressF() {
             const player = videojs(document.getElementById('my-video'));
             player.play();
@@ -361,13 +358,66 @@ export default {
             e.dispatchEvent(clickEvent);
         },
         onPressSpace() {
-            console.log('gut');
             const player = videojs(document.getElementById('my-video'));
             if (player.paused()) {
                 player.play();
             } else {
                 player.pause();
             }
+        },
+        registerKeyboardListener() {
+            document.addEventListener('keydown', (event) => {
+                if (document.activeElement.tagName.toLowerCase() == "input") {
+                    return;
+                }
+                switch (event.key) {
+                    case 'f':
+                        event.preventDefault();
+                        this.fullscreenAndPlay();
+                        break;
+                    case ' ':
+                        event.preventDefault();
+                        this.togglePlay();
+                        break;
+                    case 'd':
+                        event.preventDefault();
+                        this.clickOn("unliked-radio");
+                        break;
+                    case 'l':
+                        event.preventDefault();
+                        this.clickOn("liked-radio");
+                        break;
+                    case 'u':
+                        event.preventDefault();
+                        this.clickOn("unrated-radio");
+                        break;
+                    case 's':
+                        event.preventDefault();
+                        this.save();
+                        break;
+                    case 'n':
+                        event.preventDefault();
+                        this.next();
+                        break;
+                    case 'q':
+                        event.preventDefault();
+                        this.showAllTags();
+                        break;
+                    case 'a':
+                        event.preventDefault();
+                        this.clickOn("availability");
+                        break;
+                    case 'v':
+                        event.preventDefault();
+                        this.clickOn("fan");
+                        break;
+                    case 't':
+                        event.preventDefault();
+                        const tagsInput = document.querySelectorAll('[placeholder="Add tag..."]')[0];
+                        tagsInput.focus();
+                        break;
+                }
+            });
         },
         getAllTags() {
             const path = "http://localhost:5000/tags";
@@ -496,6 +546,28 @@ export default {
         syncAudioTimestamp(currentTime) {
             this.audioElement.currentTime = currentTime;
         },
+        fullscreenAndPlay() {
+            const player = document.getElementById("video-player");
+            player.requestFullscreen();
+            player.play();
+        },
+        togglePlay() {
+            const player = document.getElementById("video-player");
+            if (player.paused) {
+                player.play();
+            } else {
+                player.pause();
+            }
+        },
+        clickOn(id) {
+            const clickEvent = new MouseEvent("click", {
+                view: window,
+                bubbles: true,
+                cancelable: false
+            });
+            const button = document.getElementById(id);
+            button.dispatchEvent(clickEvent);
+        }
     },
     created() {
         this.initialize();

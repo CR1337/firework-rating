@@ -3,13 +3,61 @@ import re
 from functools import cached_property
 from string import digits
 from typing import Iterator
-import numpy as np
 
+import ffmpeg
 import matplotlib.pyplot as plt
-
+import numpy as np
 from db.base_model import BaseModel
 from peewee import (BooleanField, DoesNotExist, ForeignKeyField, IntegerField,
                     TextField)
+from pytube import YouTube
+
+
+class ProductVideoMixin:
+
+    YOUTUBE_LINK_PREFIX: str = "https://www.youtube.com/watch?v="
+    OUTPUT_DIRECTORY: str = "backend/static/videos"
+
+    def download_video(self, temp_directory: str):
+        if self.youtube_handle is None or self.youtube_handle == "":
+            return
+        output_filename = os.path.join(
+            self.OUTPUT_DIRECTORY, f"{self.id_}.mp4"
+        )
+        if os.path.exists(output_filename):
+            return
+        youtube = YouTube(
+            f"{self.YOUTUBE_LINK_PREFIX}{self.youtube_handle}"
+        )
+        video_stream = (
+            youtube.streams.filter(mime_type='video/mp4')
+            .order_by('resolution')
+            .desc()
+            .first()
+        )
+        audio_stream = (
+            youtube.streams.filter(mime_type='audio/mp4')
+            .order_by('bitrate')
+            .desc()
+            .first()
+        )
+        video_stream.download(temp_directory, filename=f"{self.id_}.mp4")
+        audio_stream.download(temp_directory, filename=f"{self.id_}.mp3")
+        video_data = ffmpeg.input(
+            os.path.join(temp_directory, f"{self.id_}.mp4")
+        )
+        audio_data = ffmpeg.input(
+            os.path.join(temp_directory, f"{self.id_}.mp3")
+        )
+        ffmpeg.output(
+            video_data,
+            audio_data,
+            output_filename,
+            vcodec='copy',
+            acodec='aac'
+        ).run()
+        os.remove(os.path.join(temp_directory, f"{self.id_}.mp4"))
+        os.remove(os.path.join(temp_directory, f"{self.id_}.mp3"))
 
 
 class ProductPlottingMixin:
@@ -158,6 +206,7 @@ class ProductSerializeMixin:
             'fan': self.fan,
             'nem': self.nem,
             'availability': self.availability,
+            'is_new': self.is_new,
             'rating': self.rating,
             'rated': self.rated,
             'tags': [t.name for t in tags],
@@ -304,7 +353,7 @@ class ProductPropertyMixin:
 
 class Product(
     BaseModel, ProductPlottingMixin,
-    ProductSerializeMixin, ProductPropertyMixin
+    ProductSerializeMixin, ProductPropertyMixin, ProductVideoMixin
 ):
     url = TextField(unique=True)
     name = TextField()
@@ -322,6 +371,7 @@ class Product(
     nem = IntegerField(null=True)
     availability = BooleanField(default=True)
     shot_count_has_multiplier = BooleanField(null=True)
+    is_new = BooleanField(default=False)
 
     rating = BooleanField(default=None, null=True)
     rated = BooleanField(default=False)
