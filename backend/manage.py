@@ -4,6 +4,7 @@ import sys
 from db.base_model import db
 from product import Product, Tag, TagXProduct
 from scraper import Scraper
+from temp_directory import TempDirectory
 
 TAGS: list[str] = [
     'impact', 'intro', 'finale', 'howler', 'colorful'
@@ -47,6 +48,14 @@ def create_plots():
         p.create_plots()
 
 
+def download_videos():
+    temp_directory = TempDirectory().directory
+    product_count = len(Product.select())
+    for i, product in enumerate(Product.select()):
+        print(f"{i + 1}/{product_count}: {product.name}")
+        product.download_video(temp_directory)
+
+
 def scrape():
     scraper = Scraper()
     scraper.scrape()
@@ -66,6 +75,8 @@ def main():
         create_plots()
     elif arg == 'db_recreate':
         db_recreate()
+    elif arg == 'download_videos':
+        download_videos()
 
 
 if __name__ == "__main__":

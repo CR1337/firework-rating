@@ -22,6 +22,17 @@
             ],
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "Python: Download Videos",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/manage.py",
+            "args": [
+                "download_videos"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
     ]
 }
