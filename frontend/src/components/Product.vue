@@ -53,11 +53,11 @@
         width: 100%;
         height: 16px;
     }
-    
+
     #new-tag {
         color: red;
     }
-    
+
     #video-player {
         width: 100%;
         height: 100%;
@@ -306,7 +306,7 @@ export default {
     },
     mounted() {
         this.$nextTick(() => {
-            const player = videojs(document.getElementById('my-video'));
+            const player = videojs(document.getElementById('video-player'));
 
             player.on('play', () => {
                 this.handleVideoPlay();
@@ -329,25 +329,7 @@ export default {
             this.getAllTags();
             this.getProduct();
             this.getProgressInfo();
-        },
-        onPressF() {
-            const player = videojs(document.getElementById('my-video'));
-            player.play();
-            player.requestFullscreen();
-        },
-        onPressD() {
-            const dislikeRadio = document.getElementById('unliked-radio');
-            this.clickElement(dislikeRadio);
-        },
-        onPressL() {
-            const likedRadio = document.getElementById('liked-radio');
-            this.clickElement(likedRadio);
-        },
-        onPressS() {
-            this.save_button();
-        },
-        onPressN() {
-            this.next();
+            this.registerKeyboardListener();
         },
         clickElement(e) {
             const clickEvent = new MouseEvent("click", {
@@ -356,14 +338,6 @@ export default {
                 "cancelable": false
             });
             e.dispatchEvent(clickEvent);
-        },
-        onPressSpace() {
-            const player = videojs(document.getElementById('my-video'));
-            if (player.paused()) {
-                player.play();
-            } else {
-                player.pause();
-            }
         },
         registerKeyboardListener() {
             document.addEventListener('keydown', (event) => {
