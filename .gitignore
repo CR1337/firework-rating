@@ -166,3 +166,5 @@ backend/static/product_plots/*
 frontend/node_modules/**
 
 **.mp4
+
+!backend/db/db.sqlite3
