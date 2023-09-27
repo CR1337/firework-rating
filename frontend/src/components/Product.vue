@@ -75,7 +75,7 @@
 </style>
 
 <template>
-    <progress id="rating-progress" :value="rating_progress" :max="product_count">{{ product_count }} %</progress>
+    <progress id="rating-progress" :value="rating_progress" :max="product_count">{{ product_count }} %</progress><a>{{ rating_progress }} / {{ product_count }}</a>
     <div class="container" v-if="product">
         <h3>
             <template v-if="product.is_new"><a id="new-tag">[NEW]</a></template>
