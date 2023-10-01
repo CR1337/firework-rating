@@ -34,14 +34,17 @@ def route_product_data(pid: str):
 @app.route("/product/next-unrated", methods=['GET'])
 def route_product_next_unrated():
     excluded_pid = request.args.get('excluded') or None
-    product = (
-        Product.get(
-            Product.id_ != excluded_pid,
-            Product.rated == False  # noqa: E712
+    try:
+        product = (
+            Product.get(
+                Product.id_ != excluded_pid,
+                Product.rated == False  # noqa: E712
+            )
+            if excluded_pid
+            else Product.get(Product.rated == False)  # noqa: E712
         )
-        if excluded_pid
-        else Product.get(Product.rated == False)  # noqa: E712
-    )
+    except DoesNotExist:
+        return {'success': False, 'message': "No more unrated products!"}, 404
     return product.to_dict(), 200
 
 
