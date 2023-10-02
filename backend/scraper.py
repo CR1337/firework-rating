@@ -2,6 +2,7 @@ import multiprocessing
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
+from difflib import SequenceMatcher
 from itertools import chain
 from math import ceil
 from string import digits
@@ -11,10 +12,15 @@ from typing import Callable, Iterator
 import requests
 from bs4 import BeautifulSoup
 from peewee import DoesNotExist
-from product import Product
+from product import Product, Color, ColorXProduct
 
 
 class ProductProperties:
+
+    COLORS: list[str] = [
+        "silber", "blau", "grün", "rot", "gelb", "pink", "violett", "lila",
+        "türkis", "gold", "weiß", "orange", "bunt"
+    ]
 
     _properties: dict
     _soup: BeautifulSoup
@@ -138,6 +144,30 @@ class ProductProperties:
         ).replace(",", "."))
         return int(value * 1000)
 
+    def colors(self) -> list[str]:
+        if 'farben' not in self._properties:
+            return []
+        raw_colors = [
+            c.replace(".", "").lower().strip() for c
+            in self._properties['farben'].replace(" ", ",").split(",")
+            if len(c) > 0
+        ]
+        if len(raw_colors) == 0:
+            return []
+        colors = [
+            sorted(
+                [
+                    (color, SequenceMatcher(None, color, raw_color).ratio())
+                    for color in self.COLORS
+                ],
+                key=lambda x: x[1],
+                reverse=True
+            )[0][0]
+            for raw_color in raw_colors
+        ]
+        colors = list(set(colors))
+        return colors
+
     def availability(self) -> bool:
         return not any(
             len(self._soup.body.findAll(string=string)) > 0
@@ -236,6 +266,25 @@ class Scraper:
         a_s = (div.find('a') for div in divs)
         return (a.get('href') for a in a_s)
 
+    def _attach_colors(self, product: Product, properties: ProductProperties):
+        for color_string in properties.colors():
+            try:
+                color = Color.get(Color.name == color_string)
+            except DoesNotExist:
+                color = Color(name=color_string)
+                color.save(force_insert=True)
+
+            try:
+                ColorXProduct.get(
+                    ColorXProduct.color == color,
+                    ColorXProduct.product == product
+                )
+            except DoesNotExist:
+                ColorXProduct(
+                    color=color,
+                    product=product
+                ).save(force_insert=True)
+
     def _create_product(self, product_url: str) -> Product:
         soup = self._request_soup(product_url)
         properties = ProductProperties(soup)
@@ -273,6 +322,7 @@ class Scraper:
         finally:
             product.url = product_url
             product.article_number = properties.article_number()
+            self._attach_colors(product, properties)
             with self._db_lock:
                 product.save(force_insert=not exists)
 

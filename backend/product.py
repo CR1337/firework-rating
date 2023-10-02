@@ -386,6 +386,15 @@ class TagXProduct(BaseModel):
     product = ForeignKeyField(Product, backref='tag_x_product')
 
 
+class Color(BaseModel):
+    name = TextField(unique=True)
+
+
+class ColorXProduct(BaseModel):
+    color = ForeignKeyField(Color, backref='color_x_product')
+    product = ForeignKeyField(Product, backref='color_x_product')
+
+
 if __name__ == "__main__":
     p = Product.get()
     p.create_plots()
