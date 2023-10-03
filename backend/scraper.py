@@ -12,7 +12,7 @@ from typing import Callable, Iterator
 import requests
 from bs4 import BeautifulSoup
 from peewee import DoesNotExist
-from product import Product, Color, ColorXProduct
+from product import Color, ColorXProduct, Product
 
 
 class ProductProperties:
@@ -232,9 +232,6 @@ class Scraper:
                 return BeautifulSoup(response.content, 'html.parser')
 
     def _page_count(self, soup: BeautifulSoup) -> int:
-        # li = soup.find('li', "pages")
-        # span = next(li.children)
-        # return int(span.text.strip().split("/")[-1].strip())
         div = soup.find(
             'div',
             "col productlist-item-info productlist-item-border col-auto"

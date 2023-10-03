@@ -124,10 +124,6 @@ class ProductPlottingMixin:
                 .where(getattr(Product, field_name).is_null(False))
             ]
         )
-        # sorted_data = np.sort(values)
-        # n = len(sorted_data)
-        # outliers = int(n * 0.05)
-        # return sorted_data[outliers:n - outliers]
         return values
 
     def _create_plot(self, field_name: str) -> str:
