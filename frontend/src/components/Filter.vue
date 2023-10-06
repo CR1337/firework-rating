@@ -7,15 +7,15 @@
 </style>
 
 <template>
-<b>[{{ type }} filter]&nbsp;</b>
-<label><input type="checkbox" v-model="_inverted" @change="emitDataChanged">Not</label>
+<b>[{{ typeSymbols[type] }} {{ type }} filter]&nbsp;</b>
+<label><input type="checkbox" v-model="_inverted" @change="emitDataChanged">🚫 Not</label>
 &nbsp;
 
 <!-- Tag Filter -->
 <template v-if="type === 'tag'">
     <select v-model="_operation" @change="emitDataChanged">
-        <option value="has">Has</option>
-        <option value="has_only">Has Only</option>
+        <option value="has">🫴 Has</option>
+        <option value="has_only">🤏 Has Only</option>
     </select>
     <select v-model="_value" @change="emitDataChanged">
         <option v-for="tag in allTags" :value="tag">{{ tag }}</option>
@@ -25,8 +25,8 @@
 <!-- Color Filter -->
 <template v-else-if="type === 'color'">
     <select v-model="_operation" @change="emitDataChanged">
-        <option value="has">Has</option>
-        <option value="has_only">Has Only</option>
+        <option value="has">🫴 Has</option>
+        <option value="has_only">🤏 Has Only</option>
     </select>
     <select v-model="_value" @change="emitDataChanged">
         <option v-for="color in allColors" :value="color">{{ color }}</option>
@@ -39,16 +39,16 @@
         <option v-for="field in allTextFields" :value="field">{{ field }}</option>
     </select>
     <select v-model="_operation" @change="emitDataChanged">
-        <option value="is">is</option>
-        <option value="startswith">starts with</option>
-        <option value="endswith">ends with</option>
-        <option value="contains">contains</option>
+        <option value="is">🟰 is</option>
+        <option value="startswith">◀️ starts with</option>
+        <option value="endswith">▶️ ends with</option>
+        <option value="contains">🫙 contains</option>
     </select>
     <input v-model="_value" @change="emitDataChanged">
     &nbsp;
-    <label><input type="checkbox" v-model="_caseSensitive" @change="emitDataChanged">Case Sensitive</label>
+    <label><input type="checkbox" v-model="_caseSensitive" @change="emitDataChanged">🇦 Case Sensitive</label>
     &nbsp;
-    <label><input type="checkbox" v-model="_showNull" @change="emitDataChanged">Show Null</label>
+    <label><input type="checkbox" v-model="_showNull" @change="emitDataChanged">0️⃣ Show Null</label>
 </template>
 
 <!-- Number Filter -->
@@ -66,7 +66,7 @@
     </select>
     <input v-model="_value" @change="emitDataChanged">
     &nbsp;
-    <label><input type="checkbox" v-model="_showNull" @change="emitDataChanged">Show Null</label>
+    <label><input type="checkbox" v-model="_showNull" @change="emitDataChanged">0️⃣ Show Null</label>
 
 </template>
 
@@ -76,7 +76,7 @@
         <option v-for="field in allBooleanFields" :value="field">{{ field }}</option>
     </select>
     &nbsp;
-    <label><input type="checkbox" v-model="_showNull" @change="emitDataChanged">Show Null</label>
+    <label><input type="checkbox" v-model="_showNull" @change="emitDataChanged">0️⃣ Show Null</label>
 
 </template>
 
@@ -84,8 +84,8 @@
 <template v-else-if="type === 'group'">
     <div class="bordered">
     <template v-for="(filter, index) in _filters" :key="filter.uuid">
-        <button @click="moveUp(index)" :disabled="index == 0">↑</button>
-        <button @click="moveDown(index)" :disabled="index == _filters.length - 1">↓</button>
+        <button @click="moveUp(index)" :disabled="index == 0">⬆️</button>
+        <button @click="moveDown(index)" :disabled="index == _filters.length - 1">⬇️</button>
         <button @click="removeFilter(index)">🗑</button>
         &nbsp;
         <select v-if="index > 0" v-model="filter.operator">
@@ -110,14 +110,14 @@
         <br>
     </template>
     <select v-model="newFilterType">
-        <option value="text">Text</option>
-        <option value="number">Number</option>
-        <option value="boolean">Boolean</option>
-        <option value="tag">Tag</option>
-        <option value="color">Color</option>
-        <option value="group">Group</option>
+        <option value="text">🔤 Text</option>
+        <option value="number">🔢 Number</option>
+        <option value="boolean">🔘 Boolean</option>
+        <option value="tag">🏷 Tag</option>
+        <option value="color">🎨 Color</option>
+        <option value="group">🗃 Group</option>
     </select>
-    <button @click="addFilter()">Add Filter</button>
+    <button @click="addFilter()">➕ Add Filter</button>
     </div>
 </template>
 </template>
@@ -157,7 +157,15 @@ export default {
             _filters: undefined,
             _operator: undefined,
 
-            newFilterType: "text"
+            newFilterType: "text",
+            typeSymbols: {
+                "text": "🔤",
+                "number": "🔢",
+                "boolean": "🔘",
+                "tag": "🏷",
+                "color": "🎨",
+                "group": "🗃"
+            }
         };
     },
     created() {
