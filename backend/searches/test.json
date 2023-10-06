@@ -1,0 +1,21 @@
+{
+    "type": "group",
+    "inverted": "false",
+    "caseSensitive": false,
+    "filters": [
+        {
+            "uuid": "568f9e44-ab68-4ffc-9e88-905d805e0b17",
+            "type": "boolean",
+            "inverted": false,
+            "columnName": "availability",
+            "operator": "and"
+        },
+        {
+            "uuid": "90a187e6-9abc-4257-b66f-66d5cb3ca1db",
+            "type": "boolean",
+            "inverted": false,
+            "columnName": "rating",
+            "operator": "and"
+        }
+    ]
+}

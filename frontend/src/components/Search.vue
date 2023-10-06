@@ -7,11 +7,18 @@
 </style>
 
 <template>
+    Save: <input type="text" v-model="searchName"><button @click="saveSearch()">💾</button>
+    <template v-if="searches.length > 0">
+        Load: <select v-model="selectedSearch">
+            <option v-for="search in searches" :value="search">{{ search }}</option>
+        </select>
+        <button @click="loadSearch()">📂</button>
+        <button @click="deleteSearch()">🗑️</button>
+    </template>
     <div class="bordered"><Filter type="group" inverted="false" :filters="[]" @data-changed="filterDataChanged"></Filter></div><br>
-    <button @click="new_search()">New Search</button>
-    <button @click="perform_search()">Search</button>
-    <a href="/">Main Page</a>
-    <br>
+    <a href="/">Main Page</a><br>
+    <button @click="new_search()">🆕 New Search</button>
+    <button @click="perform_search()">🔍 Find</button>
     <button @click="toggleColumnSelection()">↘️</button>
     <br><br>
     <template v-if="showColumnSelection">
@@ -102,7 +109,9 @@ export default {
                 rated: true,
                 tags: true,
                 colors: true
-            }
+            },
+            searchName: "",
+            searches: []
         };
     },
     mounted() {
@@ -122,6 +131,7 @@ export default {
             showNull: false,
             operator: "and"
         });
+        this.loadAvailableSearches();
     },
     methods: {
         new_search() {
@@ -163,6 +173,86 @@ export default {
         },
         toggleColumnSelection() {
             this.showColumnSelection = !this.showColumnSelection;
+        },
+        saveSearch() {
+            if (this.searchName == "") {
+                alert("Please enter a name for the search.");
+                return;
+            }
+            const path = "http://localhost:5000/searches";
+            axios.post(
+                path,
+                {
+                    search_name: this.searchName,
+                    search: this.filterData
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                }
+            ).then((res) => {
+                if (!this.searches.includes(this.searchName))
+                    this.searches.push(this.searchName);
+            }).catch((error) => {
+                console.error(error);
+            });
+        },
+        loadSearch() {
+            const path = "http://localhost:5000/searches/" + this.selectedSearch;
+            axios.get(
+                path,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                }
+            )
+                .then((res) => {
+                    this.filterData = res.data.search;
+                    this.perform_search();
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+        },
+        deleteSearch() {
+            const path = "http://localhost:5000/searches/" + this.selectedSearch;
+            axios.delete(
+                path,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                }
+            )
+                .then((res) => {
+                    this.searches = this.searches.filter((search) => search != this.selectedSearch);
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+        },
+        loadAvailableSearches() {
+            const path = "http://localhost:5000/searches";
+            axios.get(
+                path,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                }
+            )
+                .then((res) => {
+                    this.searches = res.data.searches;
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
         }
     },
     computed: {

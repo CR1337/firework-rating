@@ -4,6 +4,7 @@ from flask_cors import CORS
 from peewee import DoesNotExist
 from product import Product, Tag, Color
 from product_filter import ProductFilterEngine
+from searches import Searches
 
 app = Flask(__name__)
 CORS(app, resources={r'/*': {'origin': '*'}})
@@ -107,6 +108,29 @@ def route_progress():
         'rating_progress': rated_count,
         'product_count': product_count
     }, 200
+
+
+@app.route("/searches", methods=['GET', 'POST'])
+def route_searches():
+    if request.method == 'GET':
+        return {'searches': Searches.get_all_search_names()}, 200
+    elif request.method == 'POST':
+        search_name = request.json['search_name']
+        search = request.json['search']
+        Searches.save_search(search_name, search)
+        return {'success': True}, 200
+
+
+@app.route("/searches/<search_name>", methods=['GET', 'DELETE'])
+def route_search(search_name: str):
+    if request.method == 'DELETE':
+        Searches.delete_search(search_name)
+        return {'success': True}, 200
+    elif request.method == 'GET':
+        search = Searches.get_search(search_name)
+        if search is None:
+            return {'success': False, 'message': "No such search!"}, 404
+        return {'search': search}, 200
 
 
 @app.route('/static/<path:path>')
