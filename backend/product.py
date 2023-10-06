@@ -185,6 +185,10 @@ class ProductSerializeMixin:
             Tag.select().join(TagXProduct).join(Product)
             .where(Product.id_ == self.id_)
         )
+        colors = (
+            Color.select().join(ColorXProduct).join(Product)
+            .where(Product.id_ == self.id_)
+        )
         return {
             'id_': self.id_,
             'url': self.url,
@@ -206,6 +210,7 @@ class ProductSerializeMixin:
             'rating': self.rating,
             'rated': self.rated,
             'tags': [t.name for t in tags],
+            'colors': [c.name for c in colors],
             'nem_per_second': self.nem_per_second,
             'nem_per_shot': self.nem_per_shot,
             'shots_per_second': self.shots_per_second,
