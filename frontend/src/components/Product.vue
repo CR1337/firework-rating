@@ -33,7 +33,7 @@
     .unrated-button{
         accent-color: black;
     }
-    input[type=checkbox]{
+    .product-checkbox{
         width: 64px;
         height: 64px;
     }
@@ -117,11 +117,11 @@
         </div>
         <div class="row second-row">
             <div class="col-sm-2">
-                <input type="checkbox" id="availability" v-model="product.availability" @click="saved=false" />
+                <input class="product-checkbox" type="checkbox" id="availability" v-model="product.availability" @click="saved=false" />
                 <label for="availability">Available</label>
             </div>
             <div class="col-sm-2">
-                <input type="checkbox" id="fan" v-model="product.fan" @click="saved=false" />
+                <input class="product-checkbox" type="checkbox" id="fan" v-model="product.fan" @click="saved=false" />
                 <label for="fan">Fan</label>
             </div>
             <div class="col-sm-8">
