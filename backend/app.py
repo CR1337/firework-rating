@@ -2,7 +2,8 @@ from db.base_model import db
 from flask import Flask, request, send_from_directory
 from flask_cors import CORS
 from peewee import DoesNotExist
-from product import Product, Tag
+from product import Product, Tag, Color
+from product_filter import ProductFilterEngine
 
 app = Flask(__name__)
 CORS(app, resources={r'/*': {'origin': '*'}})
@@ -52,6 +53,49 @@ def route_product_next_unrated():
 def route_tags():
     tags = Tag.select()
     return [tag.name for tag in tags], 200
+
+
+@app.route("/colors", methods=['GET'])
+def route_colors():
+    colors = Color.select()
+    return [color.name for color in colors], 200
+
+
+@app.route("/text-fields", methods=['GET'])
+def route_text_fields():
+    return [
+        "name", "article_number"
+    ], 200
+
+
+@app.route("/boolean-fields", methods=['GET'])
+def route_boolean_fields():
+    return [
+        "is_new", "rated", "fan", "availability", "rating"
+    ], 200
+
+
+@app.route("/number-fields", methods=['GET'])
+def route_number_fields():
+    return [
+        "price", "weight", "min_caliber", "max_caliber", "min_height",
+        "max_height", "duration", "nem",
+        "package_size", "nem_per_second", "nem_per_shot", "shots_per_second",
+        "price_per_shot", "price_per_second", "price_per_nem", "shot_count"
+    ], 200
+
+
+@app.route("/find-products", methods=['POST'])
+def route_find_products():
+    print(request.json)
+    filters_ = request.json['filters']
+    inverted = request.json['inverted']
+    engine = ProductFilterEngine(filters_, inverted)
+    engine.run()
+    return {'products': [
+        product.to_dict()
+        for product in engine.products
+    ]}, 200
 
 
 @app.route("/progress", methods=['GET'])
