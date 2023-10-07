@@ -262,7 +262,24 @@ class ProductPropertyMixin:
         r"(?P<to_remove>[0-9]+[\s-]((Schus(s)?)|(Effekte))[\s-].*)"
     )
 
-    # @cached_property
+    def _short_name(self) -> str:
+        print(type(self.name))
+        matches = self.remove_from_name_pattern.findall(self.name)
+        if len(matches) == 0:
+            return self.name
+        matches = matches[0]
+        if matches:
+            return self.name.replace(matches[0], "")
+        else:
+            return self.name
+
+    @property
+    def youtube_link(self) -> str:
+        BASE_URL = "https://youtube.com"
+        if self.youtube_handle is None:
+            return f"{BASE_URL}/404"
+        return f"{BASE_URL}/watch?v={self.youtube_handle}"
+
     @hybrid_property
     def package_size(self) -> int:
         n_packages = 1
@@ -276,17 +293,10 @@ class ProductPropertyMixin:
         return n_packages
 
     @hybrid_property
-    def youtube_link(self) -> str:
-        BASE_URL = "https://youtube.com"
-        if self.youtube_handle is None:
-            return f"{BASE_URL}/404"
-        return f"{BASE_URL}/watch?v={self.youtube_handle}"
-
-    @hybrid_property
     def nem_per_second(self) -> float:
         try:
-            return round(
-                0.001 * self.nem / self.duration / self.package_size, 3
+            return (
+                0.001 * self.nem / self.duration / self.package_size
             )
         except TypeError:
             return None
@@ -294,35 +304,35 @@ class ProductPropertyMixin:
     @hybrid_property
     def nem_per_shot(self) -> float:
         try:
-            return round(0.001 * self.nem / self.shot_count, 3)
+            return (0.001 * self.nem / self.shot_count)
         except TypeError:
             return None
 
     @hybrid_property
     def shots_per_second(self) -> float:
         try:
-            return round(self.shot_count / self.duration, 2)
+            return (self.shot_count / self.duration)
         except TypeError:
             return None
 
     @hybrid_property
     def price_per_shot(self) -> float:
         try:
-            return round(0.01 * self.price / self.shot_count, 2)
+            return (0.01 * self.price / self.shot_count)
         except TypeError:
             return None
 
     @hybrid_property
     def price_per_second(self) -> float:
         try:
-            return round(0.01 * self.price / self.duration, 2)
+            return (0.01 * self.price / self.duration)
         except TypeError:
             return None
 
     @hybrid_property
     def price_per_nem(self) -> float:
         try:
-            return round(10 * self.price / self.nem, 2)
+            return (10 * self.price / self.nem)
         except TypeError:
             return None
 
@@ -341,17 +351,6 @@ class ProductPropertyMixin:
         ):
             return self.raw_shot_count * self.package_size
         return self.raw_shot_count
-
-    def _short_name(self) -> str:
-        print(type(self.name))
-        matches = self.remove_from_name_pattern.findall(self.name)
-        if len(matches) == 0:
-            return self.name
-        matches = matches[0]
-        if matches:
-            return self.name.replace(matches[0], "")
-        else:
-            return self.name
 
 
 class Product(
