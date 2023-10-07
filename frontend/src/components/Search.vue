@@ -155,6 +155,8 @@ export default {
     },
     methods: {
         new_search() {
+            this.filterData.inverted = false;
+            this.filterData.filters = [];
             this.filterData.filters.push({
                 uuid: crypto.randomUUID(),
                 type: "boolean",
@@ -249,6 +251,7 @@ export default {
                 .then((res) => {
                     this.filterData = res.data.search;
                     this.emitter.emit('newFilterData', this.filterData);
+                    this.searchName = this.selectedSearch;
                     this.perform_search();
                 })
                 .catch((error) => {
