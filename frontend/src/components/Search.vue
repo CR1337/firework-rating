@@ -29,8 +29,8 @@
     </template>
     <div class="bordered"><Filter type="group" inverted="false" :filters="[]" uuid="root" @data-changed="filterDataChanged"></Filter></div><br>
     <a href="/" target="_blank">Main Page</a><br>
-    <button @click="new_search()">🆕 New Search</button>
-    <button @click="perform_search()">🔍 Find</button>
+    <button @click="newSearch()">🆕 New Search</button>
+    <button @click="performSearch()">🔍 Find</button>
     <button @click="toggleColumnSelection()">↘️</button>
     <br><br>
     <template v-if="showColumnSelection">
@@ -166,10 +166,10 @@ export default {
     },
     mounted() {
         this.loadAvailableSearches();
-        this.new_search();
+        this.newSearch();
     },
     methods: {
-        new_search() {
+        newSearch() {
             this.filterData.inverted = false;
             this.filterData.filters = [];
             this.filterData.filters.push({
@@ -194,7 +194,7 @@ export default {
             this.filterData = data;
             console.log(this.filterData);
         },
-        perform_search() {
+        performSearch() {
             const path = "http://localhost:5000/find-products";
             axios.post(
                 path,
@@ -267,7 +267,7 @@ export default {
                     this.filterData = res.data.search;
                     this.emitter.emit('newFilterData', this.filterData);
                     this.searchName = this.selectedSearch;
-                    this.perform_search();
+                    this.performSearch();
                 })
                 .catch((error) => {
                     console.error(error);
@@ -332,7 +332,7 @@ export default {
     created() {
         document.title = "Search";
         this.$nextTick(() => {
-            this.perform_search();
+            this.performSearch();
         })
     }
 };
