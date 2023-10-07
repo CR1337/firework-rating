@@ -24,7 +24,7 @@
     <template v-if="showColumnSelection">
         <template v-for="(_, column, index) of showColumns">
             <label><input type="checkbox" v-model="showColumns[column]">{{ column }}</label>&nbsp;&nbsp;&nbsp;
-            <template  v-if="(index + 1) % 3 == 0"><br><br></template>
+            <template  v-if="(index + 1) % 8 == 0"><br><br></template>
         </template>
         <br><br>
     </template>
