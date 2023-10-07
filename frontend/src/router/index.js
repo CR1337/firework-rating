@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Overview from '../components/Overview.vue'
 import Product from '../components/Product.vue'
 import Index from '../components/Index.vue'
 import Search from '../components/Search.vue'
@@ -11,11 +10,6 @@ const router = createRouter({
       path: '/',
       name: 'index',
       component: Index
-    },
-    {
-      path: '/overview',
-      name: 'overview',
-      component: Overview
     },
     {
       path: '/product/:id',

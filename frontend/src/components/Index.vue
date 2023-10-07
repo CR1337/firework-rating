@@ -1,6 +1,5 @@
 <template>
     <button @click="rating()">Rating</button>
-    <button @click="overview()">Overview</button>
     <button @click="search()">Search</button>
 </template>
 
@@ -21,9 +20,6 @@ export default {
                 .catch((error) => {
                     console.error(error);
                 });
-      },
-      overview() {
-        window.location.replace("/overview");
       },
       search() {
         window.location.replace("/search");

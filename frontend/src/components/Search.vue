@@ -4,6 +4,18 @@
         padding: 10px;
         margin: 10px;
     }
+    table {
+        width: 100%;
+        border: 1px solid black;
+    }
+    .table-cell {
+        border: 1px solid black;
+    }
+    .sortable {
+        text-decoration: underline;
+        color: red;
+        cursor: pointer;
+    }
 </style>
 
 <template>
@@ -16,7 +28,7 @@
         <button @click="deleteSearch()">🗑️</button>
     </template>
     <div class="bordered"><Filter type="group" inverted="false" :filters="[]" uuid="root" @data-changed="filterDataChanged"></Filter></div><br>
-    <a href="/">Main Page</a><br>
+    <a href="/" target="_blank">Main Page</a><br>
     <button @click="new_search()">🆕 New Search</button>
     <button @click="perform_search()">🔍 Find</button>
     <button @click="toggleColumnSelection()">↘️</button>
@@ -316,7 +328,7 @@ export default {
         }
     },
     created() {
-        document.title = "Overview";
+        document.title = "Search";
         this.$nextTick(() => {
             this.perform_search();
         })

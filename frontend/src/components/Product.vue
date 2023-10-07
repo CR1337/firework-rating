@@ -272,7 +272,7 @@
     </div>
     <br>
     <button @click="showAllTags()">Tags</button>&nbsp;&nbsp;&nbsp;
-    <a href="/">Main Page</a>&nbsp;&nbsp;&nbsp;<a href="/overview">Overview</a>
+    <a href="/" target="_blank">Main Page</a>&nbsp;&nbsp;&nbsp;<a href="/search" target="_blank">Search</a>
 
 
 </template>
