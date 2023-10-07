@@ -44,6 +44,7 @@
     <table>
         <thead>
         <tr>
+            <th class="table-cell">#</th>
             <th v-if="showColumns.id" class="table-cell">ID</th>
             <th v-if="showColumns.is_new" class="table-cell">New</th>
             <th v-if="showColumns.availability" class="table-cell">Available</th>
@@ -75,7 +76,8 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="product in sortedProducts">
+        <tr v-for="(product, index) in sortedProducts">
+            <td class="table-cell" align="right">{{ index }}</td>
             <td v-if="showColumns.id" class="table-cell" align="right">{{ product.id_ }}</td>
             <td v-if="showColumns.is_new" class="table-cell" align="right">{{ product.is_new }}</td>
             <td v-if="showColumns.availability" class="table-cell" align="right">{{ product.availability }}</td>
