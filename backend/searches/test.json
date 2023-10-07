@@ -1,0 +1,54 @@
+{
+    "uuid": "root",
+    "type": "group",
+    "inverted": false,
+    "caseSensitive": false,
+    "filters": [
+        {
+            "uuid": "5eb7a469-29ab-47c1-bce3-fb8303fec989",
+            "type": "boolean",
+            "inverted": false,
+            "columnName": "availability",
+            "operator": "and"
+        },
+        {
+            "uuid": "f39e79e7-406b-4cdc-a452-e5bbcbd8b0b1",
+            "type": "boolean",
+            "inverted": false,
+            "columnName": "rating",
+            "operator": "and"
+        },
+        {
+            "uuid": "ad5d8042-fd3c-4d63-8e79-53c9beb921e1",
+            "type": "group",
+            "inverted": true,
+            "filters": [
+                {
+                    "uuid": "30e05b20-71ac-49b4-be21-85f5265c18af",
+                    "type": "color",
+                    "value": "gold",
+                    "operation": "has",
+                    "inverted": false,
+                    "operator": "and"
+                },
+                {
+                    "uuid": "81a8b1ea-cdc5-444b-aed4-5bfc1b3fd9eb",
+                    "type": "color",
+                    "value": "gelb",
+                    "operation": "has",
+                    "inverted": false,
+                    "operator": "or"
+                }
+            ],
+            "operator": "and"
+        },
+        {
+            "uuid": "3cfe922d-7cd8-4fe1-be2a-57927b200308",
+            "type": "color",
+            "value": "blau",
+            "operation": "has",
+            "inverted": false,
+            "operator": "and"
+        }
+    ]
+}
