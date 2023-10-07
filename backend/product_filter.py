@@ -1,7 +1,8 @@
 from __future__ import annotations
 from product import Product, Color, ColorXProduct, Tag, TagXProduct
-from peewee import fn, DoesNotExist
+from peewee import DoesNotExist
 from abc import ABC, abstractmethod
+from db.base_model import BaseModel
 
 
 class Token(ABC):
@@ -207,7 +208,10 @@ class BooleanFilter(ProductFilter):
         return set([product for product in products])
 
 
-class TagFilter(ProductFilter):
+class TagAndColorFilter(ProductFilter):
+
+    TABLE: BaseModel = None
+    X_TABLE: BaseModel = None
 
     def __init__(
         self, value: str, operation: str, inverted: bool, column_name: str
@@ -218,63 +222,52 @@ class TagFilter(ProductFilter):
         if self._operation == 'has':
             products = (
                 Product.select().distinct()
-                .join(TagXProduct)
-                .join(Tag).where(
-                    (Tag.name == self._value) != self._inverted
+                .join(self.X_TABLE)
+                .join(self.TABLE).where(
+                    (self.TABLE.name == self._value)
                 )
             )
         elif self._operation == 'has_only':
             products = (
-                Product.select().distinct()
-                .join(TagXProduct)
-                .join(Tag).where(Tag.name == self._value)
-                .group_by(Product)
-                .having(
-                    fn.COUNT(TagXProduct.id_) == 1
-                    if not self._inverted
-                    else fn.COUNT(TagXProduct.id_) > 1
-                )
+                Product.select()
+                .join(self.X_TABLE)
+                .join(self.TABLE)
+                .where(self.TABLE.name == self._value)
+                .where(~Product.id_.in_(
+                    Product.select(Product.id_)
+                    .join(self.X_TABLE)
+                    .join(self.TABLE)
+                    .where(self.TABLE.name != self._value)
+                ))
             )
+
+        if self._inverted:
+            products = Product.select().where(Product.id_.not_in(products))
 
         return set([product for product in products])
 
 
-class ColorFilter(ProductFilter):
+class TagFilter(TagAndColorFilter):
 
-    def __init__(
-        self, value: str, operation: str, inverted: bool, column_name: str
-    ):
-        super().__init__(str(value), operation, inverted, column_name)
+    TABLE: BaseModel = Tag
+    X_TABLE: BaseModel = TagXProduct
 
-    def run(self) -> set[Product]:
-        if self._operation == 'has':
-            products = (
-                Product.select().distinct()
-                .join(ColorXProduct)
-                .join(Color).where(
-                    (Color.name == self._value) != self._inverted
-                )
-            )
-        elif self._operation == 'has_only':
-            products = (
-                Product.select().distinct()
-                .join(ColorXProduct)
-                .join(Color).where(Color.name == self._value)
-                .group_by(Product)
-                .having(
-                    fn.COUNT(ColorXProduct.id_) == 1
-                    if not self._inverted
-                    else fn.COUNT(ColorXProduct.id_) > 1
-                )
-            )
 
-        return set([product for product in products])
+class ColorFilter(TagAndColorFilter):
+
+    TABLE: BaseModel = Color
+    X_TABLE: BaseModel = ColorXProduct
 
 
 class ProductFilterEngine:
 
     COLUMN_NAME_REPLACEMENTS: dict[str, str] = {
-        # "name": "short_name"
+        "name": "short_name"
+    }
+    COLUMN_MULTIPLIERS: dict[str, int] = {
+        "price": 100,
+        "weight": 1000,
+        "nem": 1000,
     }
 
     _raw_filters: list[dict[str, any]]
@@ -329,9 +322,14 @@ class ProductFilterEngine:
                     ))
                 )
             elif raw_filter.get('type', None) == 'number':
+                value = raw_filter.get('value', None)
+                if value is not None:
+                    value = float(value) * self.COLUMN_MULTIPLIERS.get(
+                        raw_filter.get('columnName', None), 1
+                    )
                 self._tokens.append(
                     FilterToken(NumberFilter(
-                        raw_filter.get('value', None),
+                        value,
                         raw_filter.get('operation', None),
                         raw_filter.get('inverted', None),
                         raw_filter.get('columnName', None),
@@ -437,7 +435,7 @@ class ProductFilterEngine:
 
 if __name__ == "__main__":
     inversed = True
-    raw_filters = [{'uuid': '12b67bb6-966a-4f63-a05c-9778be25db84', 'type': 'boolean', 'inverted': False, 'columnName': 'availability', 'showNull': None, 'operator': 'and'}, {'uuid': 'bf4f1c6b-fcc6-4245-8abf-9929d4903566', 'type': 'boolean', 'inverted': False, 'columnName': 'rating', 'showNull': None, 'operator': 'and'}]
+    raw_filters = [{'uuid': 'c2835bf0-2bf3-4296-a21c-3a12cf187bc3', 'type': 'number', 'value': '80', 'operation': '<', 'inverted': False, 'columnName': 'price_per_nem', 'operator': 'and'}]
     engine = ProductFilterEngine(raw_filters, inversed)
     engine.run()
     print([p.name for p in engine.products])
