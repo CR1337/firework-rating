@@ -90,7 +90,6 @@
         &nbsp;
         <select v-if="index > 0" v-model="filter.operator">
             <option value="and">AND</option>
-            <option value="or">XOR</option>
             <option value="or">OR</option>
         </select>
         &nbsp;
