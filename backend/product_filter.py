@@ -11,7 +11,6 @@ class Token(ABC):
 class OperatorToken(Token):
 
     OR: str = 'or'
-    XOR: str = 'xor'
     AND: str = 'and'
     NOT: str = 'not'
 
@@ -25,11 +24,6 @@ class OperatorToken(Token):
             return False
         elif isinstance(other, OperatorToken):
             if self._operator == self.AND:
-                return (
-                    other._operator == self.OR
-                    or other._operator == self.XOR
-                )
-            elif self._operator == self.XOR:
                 return other._operator == self.OR
             elif self._operator == self.OR:
                 return False
@@ -108,42 +102,33 @@ class TextFilter(ProductFilter):
         super().__init__(str(value), operation, inverted, column_name)
         self._show_null = show_null
         self._case_sensitive = case_sensitive
-        if self._case_sensitive:
+        if not self._case_sensitive:
             self._value = self._value.lower()
 
     def run(self) -> set[Product]:
         attribute = getattr(Product, self._column_name)
+        wildcard = '*' if self._case_sensitive else '%'
 
-        if self._operation == 'exact':
+        if self._operation == 'is':
             products = Product.select().where(
                 (
                     attribute == self._value
                     if self._case_sensitive
-                    else attribute.ilike(f"{self._value}")
+                    else attribute.ilike(self._value)
                 ) != self._inverted
             )
         elif self._operation == 'startswith':
             products = Product.select().where(
-                (
-                    attribute.startswith(self._value)
-                    if self._case_sensitive
-                    else attribute.ilike(f"{self._value}%")
-                ) != self._inverted
+                attribute.ilike(f"{self._value}{wildcard}") != self._inverted
             )
         elif self._operation == 'endswith':
             products = Product.select().where(
-                (
-                    attribute.endswith(self._value)
-                    if self._case_sensitive
-                    else attribute.ilike(f"%{self._value}")
-                ) != self._inverted
+                attribute.ilike(f"{wildcard}{self._value}") != self._inverted
             )
         elif self._operation == 'contains':
             products = Product.select().where(
-                (
-                    attribute.contains(self._value)
-                    if self._case_sensitive
-                    else attribute.ilike(f"%{self._value}%")
+                attribute.ilike(
+                    f"{wildcard}{self._value}{wildcard}"
                 ) != self._inverted
             )
 
@@ -288,6 +273,10 @@ class ColorFilter(ProductFilter):
 
 class ProductFilterEngine:
 
+    COLUMN_NAME_REPLACEMENTS: dict[str, str] = {
+        # "name": "short_name"
+    }
+
     _raw_filters: list[dict[str, any]]
     _inverted: bool
     _tokens: list[Token]
@@ -299,11 +288,13 @@ class ProductFilterEngine:
         self._tokens = []
 
     def run(self):
+        if len(self._raw_filters) == 0:
+            self._products = set([product for product in Product.select()])
+            return
         self._tokenize(self._raw_filters)
         self._shunting_yard()
         if self._inverted:
-            self._tokens.append(OperatorToken.NOT)
-        self._replace_xor()
+            self._tokens.append(OperatorToken(OperatorToken.NOT))
         self._filter_products()
 
     def _tokenize(
@@ -316,6 +307,10 @@ class ProductFilterEngine:
                     OperatorToken(raw_filter.get('operator', None))
                 )
             is_first = False
+            raw_filter['columnName'] = self.COLUMN_NAME_REPLACEMENTS.get(
+                raw_filter.get('columnName', None),
+                raw_filter.get('columnName', None)
+            )
             if raw_filter.get('type', None) == 'group':
                 if raw_filter.get('inverted', None):
                     self._tokens.append(OperatorToken(OperatorToken.NOT))
@@ -411,26 +406,6 @@ class ProductFilterEngine:
             output_queue.append(token_stack.pop())
         self._tokens = output_queue
 
-    def _replace_xor(self):
-        tokens = []
-        for token in self._tokens:
-            if not isinstance(token, OperatorToken):
-                tokens.append(token)
-                continue
-            if token != OperatorToken(OperatorToken.XOR):
-                tokens.append(token)
-                continue
-            b = tokens.pop()
-            a = tokens.pop()
-            tokens.append(a)
-            tokens.append(~b)
-            tokens.append(OperatorToken(OperatorToken.AND))
-            tokens.append(~a)
-            tokens.append(b)
-            tokens.append(OperatorToken(OperatorToken.AND))
-            tokens.append(OperatorToken(OperatorToken.OR))
-        self._tokens = tokens
-
     def _filter_products(self):
         token_stack = []
         for token in self._tokens:
@@ -461,7 +436,7 @@ class ProductFilterEngine:
 
 
 if __name__ == "__main__":
-    inversed = False
+    inversed = True
     raw_filters = [{'uuid': '12b67bb6-966a-4f63-a05c-9778be25db84', 'type': 'boolean', 'inverted': False, 'columnName': 'availability', 'showNull': None, 'operator': 'and'}, {'uuid': 'bf4f1c6b-fcc6-4245-8abf-9929d4903566', 'type': 'boolean', 'inverted': False, 'columnName': 'rating', 'showNull': None, 'operator': 'and'}]
     engine = ProductFilterEngine(raw_filters, inversed)
     engine.run()
