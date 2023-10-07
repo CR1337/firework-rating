@@ -1,6 +1,5 @@
 import os
 import re
-from functools import cached_property
 from string import digits
 from typing import Iterator
 
@@ -9,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from db.base_model import BaseModel
 from peewee import (BooleanField, DoesNotExist, ForeignKeyField, IntegerField,
-                    TextField, fn, Case)
+                    TextField)
 from playhouse.hybrid import hybrid_property
 from pytube import YouTube
 
