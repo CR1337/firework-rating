@@ -179,6 +179,21 @@ export default {
         this._filters = this.filters;
         this._operator = this.operator;
         this.emitDataChanged();
+
+        this.emitter.on('newFilterData', (data) => {
+            if (this.uuid != "root") {
+                return;
+            }
+            this._value = data.value;
+            this._operation = data.operation;
+            this._inverted = data.inverted;
+            this._columnName = data.columnName;
+            this._show_null = data.showNull;
+            this._caseSensitive = data.caseSensitive;
+            this._filters = data.filters;
+            this._operator = data.operator;
+            this.emitDataChanged();
+        });
     },
     methods: {
         getAllFields() {

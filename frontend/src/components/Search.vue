@@ -15,7 +15,7 @@
         <button @click="loadSearch()">📂</button>
         <button @click="deleteSearch()">🗑️</button>
     </template>
-    <div class="bordered"><Filter type="group" inverted="false" :filters="[]" @data-changed="filterDataChanged"></Filter></div><br>
+    <div class="bordered"><Filter type="group" inverted="false" :filters="[]" uuid="root" @data-changed="filterDataChanged"></Filter></div><br>
     <a href="/">Main Page</a><br>
     <button @click="new_search()">🆕 New Search</button>
     <button @click="perform_search()">🔍 Find</button>
@@ -115,27 +115,28 @@ export default {
         };
     },
     mounted() {
-        this.filterData.filters.push({
-            uuid: crypto.randomUUID(),
-            type: "boolean",
-            inverted: false,
-            columnName: "availability",
-            showNull: false,
-            operator: "and"
-        });
-        this.filterData.filters.push({
-            uuid: crypto.randomUUID(),
-            type: "boolean",
-            inverted: false,
-            columnName: "rating",
-            showNull: false,
-            operator: "and"
-        });
         this.loadAvailableSearches();
+        this.new_search();
     },
     methods: {
         new_search() {
-            window.location.reload();
+            this.filterData.filters.push({
+                uuid: crypto.randomUUID(),
+                type: "boolean",
+                inverted: false,
+                columnName: "availability",
+                showNull: false,
+                operator: "and"
+            });
+            this.filterData.filters.push({
+                uuid: crypto.randomUUID(),
+                type: "boolean",
+                inverted: false,
+                columnName: "rating",
+                showNull: false,
+                operator: "and"
+            });
+            this.emitter.emit('newFilterData', this.filterData);
         },
         filterDataChanged(data) {
             this.filterData = data;
@@ -212,6 +213,7 @@ export default {
             )
                 .then((res) => {
                     this.filterData = res.data.search;
+                    this.emitter.emit('newFilterData', this.filterData);
                     this.perform_search();
                 })
                 .catch((error) => {
