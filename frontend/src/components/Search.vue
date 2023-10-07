@@ -87,7 +87,7 @@
             <td v-if="showColumns.package_size" class="table-cell" align="right">{{ product.package_size }}</td>
             <td v-if="showColumns.price" class="table-cell" align="right">{{ (product.price == null) ? '-' : product.price / 100 }} €</td>
             <td v-if="showColumns.yt_link && product.youtube_handle == null" class="table-cell" align="right"><a :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Search</a></td>
-            <td v-else-if="showColumns.yt_link" class="table-cell" align="right"><a :href="product.youtube_handle" target="_blank">YT</a></td>
+            <td v-else-if="showColumns.yt_link" class="table-cell" align="right"><a :href="'https://youtube.com/watch?v=' + product.youtube_handle" target="_blank">YT</a></td>
             <td v-if="showColumns.shot_count" class="table-cell" align="right">{{ (product.shot_count == null) ? '-' : product.shot_count }}</td>
             <td v-if="showColumns.duration" class="table-cell" align="right">{{ (product.duration == null) ? '-' : product.duration }}</td>
             <td v-if="showColumns.nem" class="table-cell" align="right">{{ (product.nem == null) ? '-' : roundTo(product.nem / 1000, 3) }} kg</td>
