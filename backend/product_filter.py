@@ -435,7 +435,7 @@ class ProductFilterEngine:
 
 if __name__ == "__main__":
     inversed = True
-    raw_filters = [{'uuid': 'c2835bf0-2bf3-4296-a21c-3a12cf187bc3', 'type': 'number', 'value': '80', 'operation': '<', 'inverted': False, 'columnName': 'price_per_nem', 'operator': 'and'}]
+    raw_filters = [{'uuid': 'cd4a4588-2a35-4d40-b54e-46a49d5f6484', 'type': 'number', 'value': '0.01', 'operation': '<', 'inverted': False, 'columnName': 'nem_per_second', 'operator': 'and'}]
     engine = ProductFilterEngine(raw_filters, inversed)
     engine.run()
     print([p.name for p in engine.products])

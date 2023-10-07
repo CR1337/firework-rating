@@ -263,7 +263,6 @@ class ProductPropertyMixin:
     )
 
     def _short_name(self) -> str:
-        print(type(self.name))
         matches = self.remove_from_name_pattern.findall(self.name)
         if len(matches) == 0:
             return self.name
@@ -273,15 +272,7 @@ class ProductPropertyMixin:
         else:
             return self.name
 
-    @property
-    def youtube_link(self) -> str:
-        BASE_URL = "https://youtube.com"
-        if self.youtube_handle is None:
-            return f"{BASE_URL}/404"
-        return f"{BASE_URL}/watch?v={self.youtube_handle}"
-
-    @hybrid_property
-    def package_size(self) -> int:
+    def _package_size(self) -> int:
         n_packages = 1
         if "er Pack" in self.name:
             idx = self.name.index("er Pack") - 1
@@ -291,6 +282,13 @@ class ProductPropertyMixin:
                 n_digits += 1
             n_packages = int(self.name[idx:idx + n_digits])
         return n_packages
+
+    @property
+    def youtube_link(self) -> str:
+        BASE_URL = "https://youtube.com"
+        if self.youtube_handle is None:
+            return f"{BASE_URL}/404"
+        return f"{BASE_URL}/watch?v={self.youtube_handle}"
 
     @hybrid_property
     def nem_per_second(self) -> float:
@@ -359,6 +357,7 @@ class Product(
 ):
     def save(self, *args, **kwargs):
         self.short_name = self._short_name()
+        self.package_size = self._package_size()
         super().save(*args, **kwargs)
 
     url = TextField(unique=True)
@@ -379,6 +378,7 @@ class Product(
     availability = BooleanField(default=True)
     shot_count_has_multiplier = BooleanField(null=True)
     is_new = BooleanField(default=False)
+    package_size = IntegerField()
 
     rating = BooleanField(default=None, null=True)
     rated = BooleanField(default=False)
@@ -400,9 +400,3 @@ class Color(BaseModel):
 class ColorXProduct(BaseModel):
     color = ForeignKeyField(Color, backref='color_x_product')
     product = ForeignKeyField(Product, backref='color_x_product')
-
-
-if __name__ == "__main__":
-    for p in Product.select():
-        p.short_name = p._short_name
-        p.save(force_insert=False)
