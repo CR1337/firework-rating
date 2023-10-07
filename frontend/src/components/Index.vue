@@ -13,12 +13,16 @@ export default {
       rating() {
         const path = "http://localhost:5000/product/next-unrated";
             axios.get(path)
-                .then((res) => {
+                .then(res => {
                     let nextProduct = res.data;
                     window.location.replace("/product/" + nextProduct.id_);
                 })
-                .catch((error) => {
-                    console.error(error);
+                .catch(error => {
+                    if (error.response.status == 404) {
+                      alert("No more products to rate!");
+                    } else {
+                      console.error(error);
+                    }
                 });
       },
       search() {
