@@ -22,8 +22,9 @@
     <button @click="toggleColumnSelection()">↘️</button>
     <br><br>
     <template v-if="showColumnSelection">
-        <template v-for="(_, column, _2) of showColumns">
-            <label><input type="checkbox" v-model="showColumns[column]">{{ column }}</label><br>
+        <template v-for="(_, column, index) of showColumns">
+            <label><input type="checkbox" v-model="showColumns[column]">{{ column }}</label>&nbsp;&nbsp;&nbsp;
+            <template  v-if="(index + 1) % 3 == 0"><br><br></template>
         </template>
         <br><br>
     </template>
@@ -31,45 +32,68 @@
     <table>
         <thead>
         <tr>
-            <th class="table-cell">Shop</th>
-            <th class="table-cell sortable" @click="sort('package_size')">Name</th>
-            <th class="table-cell sortable" @click="sort('price')">Price</th>
-            <th class="table-cell">YT Link</th>
-            <th class="table-cell sortable" @click="sort('shot_count')">Shots</th>
-            <th class="table-cell sortable" @click="sort('duration')">Duration</th>
-            <th class="table-cell sortable" @click="sort('nem')">NEM</th>
-            <th class="table-cell sortable" @click="sort('nem_per_second')">NEM/s</th>
-            <th class="table-cell sortable" @click="sort('nem_per_shot')">NEM/Shot</th>
-            <th class="table-cell sortable" @click="sort('price_per_second')">€/s</th>
-            <th class="table-cell sortable" @click="sort('price_per_shot')">€/Shot</th>
-            <th class="table-cell sortable" @click="sort('price_per_nem')">€/NEM</th>
-            <th class="table-cell sortable" @click="sort('shots_per_second')">Shots/s</th>
-            <th class="table-cell sortable" @click="sort('rating')">Rating</th>
-            <th class="table-cell sortable" @click="sort('rated')">Rated</th>
-            <th class="table-cell">Tags</th>
-            <th class="table-cell">Colors</th>
+            <th v-if="showColumns.id" class="table-cell">ID</th>
+            <th v-if="showColumns.is_new" class="table-cell">New</th>
+            <th v-if="showColumns.availability" class="table-cell">Available</th>
+            <th v-if="showColumns.shop" class="table-cell">Shop</th>
+            <th v-if="showColumns.article_number" class="table-cell">Article Number</th>
+            <th v-if="showColumns.name" class="table-cell sortable" @click="sort('name')">Name</th>
+            <th v-if="showColumns.package_size" class="table-cell sortable" @click="sort('package_size')">Package Size</th>
+            <th v-if="showColumns.price" class="table-cell sortable" @click="sort('price')">Price</th>
+            <th v-if="showColumns.yt_link" class="table-cell">YT Link</th>
+            <th v-if="showColumns.shot_count" class="table-cell sortable" @click="sort('shot_count')">Shots</th>
+            <th v-if="showColumns.duration" class="table-cell sortable" @click="sort('duration')">Duration</th>
+            <th v-if="showColumns.nem" class="table-cell sortable" @click="sort('nem')">NEM</th>
+            <th v-if="showColumns.weight" class="table-cell sortable" @click="sort('weight')">Weight</th>
+            <th v-if="showColumns.min_caliber" class="table-cell sortable" @click="sort('min_caliber')">Min Caliber</th>
+            <th v-if="showColumns.max_caliber" class="table-cell sortable" @click="sort('max_caliber')">Max Caliber</th>
+            <th v-if="showColumns.min_height" class="table-cell sortable" @click="sort('min_height')">Min Height</th>
+            <th v-if="showColumns.max_height" class="table-cell sortable" @click="sort('max_height')">Max Height</th>
+            <th v-if="showColumns.nem_per_second" class="table-cell sortable" @click="sort('nem_per_second')">NEM/s</th>
+            <th v-if="showColumns.nem_per_shot" class="table-cell sortable" @click="sort('nem_per_shot')">NEM/Shot</th>
+            <th v-if="showColumns.price_per_second" class="table-cell sortable" @click="sort('price_per_second')">€/s</th>
+            <th v-if="showColumns.price_per_shot" class="table-cell sortable" @click="sort('price_per_shot')">€/Shot</th>
+            <th v-if="showColumns.price_per_nem" class="table-cell sortable" @click="sort('price_per_nem')">€/NEM</th>
+            <th v-if="showColumns.shots_per_second" class="table-cell sortable" @click="sort('shots_per_second')">Shots/s</th>
+            <th v-if="showColumns.rating" class="table-cell sortable" @click="sort('rating')">Rating</th>
+            <th v-if="showColumns.rated" class="table-cell sortable" @click="sort('rated')">Rated</th>
+            <th v-if="showColumns.tags" class="table-cell">Tags</th>
+            <th v-if="showColumns.colors" class="table-cell">Colors</th>
+            <th v-if="showColumns.fan" class="table-cell">Fan</th>
         </tr>
         </thead>
         <tbody>
         <tr v-for="product in sortedProducts">
-            <td class="table-cell" align="left"><a :href="product.url" target="_blank">Shop</a></td>
-            <td class="table-cell" align="right"><a :href="'product/' + product.id_" target="_blank">{{ product.short_name }}</a>[{{ product.package_size }}]</td>
-            <td class="table-cell" align="right">{{ (product.price == null) ? '-' : product.price / 100 }} €</td>
-            <td class="table-cell" align="right" v-if="product.youtube_handle == null"><a :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Search</a></td>
-            <td class="table-cell" align="right" v-else><a :href="product.youtube_handle" target="_blank">YT</a></td>
-            <td class="table-cell" align="right">{{ (product.shot_count == null) ? '-' : product.shot_count }}</td>
-            <td class="table-cell" align="right">{{ (product.duration == null) ? '-' : product.duration }}</td>
-            <td class="table-cell" align="right">{{ (product.nem == null) ? '-' : product.nem / 1000 }} kg</td>
-            <td class="table-cell" align="right">{{ (product.nem_per_second == null) ? '-' : product.nem_per_second }} kg/s</td>
-            <td class="table-cell" align="right">{{ (product.nem_per_shot == null) ? '-' : product.nem_per_shot }} kg</td>
-            <td class="table-cell" align="right">{{ (product.price_per_second == null) ? '-' : product.price_per_second }} €/s</td>
-            <td class="table-cell" align="right">{{ (product.price_per_shot == null) ? '-' : product.price_per_shot }} €</td>
-            <td class="table-cell" align="right">{{ (product.price_per_nem == null) ? '-' : product.price_per_nem }} €/kg</td>
-            <td class="table-cell" align="right">{{ (product.shots_per_second == null) ? '-' : product.shots_per_second }} Hz</td>
-            <td class="table-cell" align="right">{{ (product.rating == null) ? '-' : product.rating }}</td>
-            <td class="table-cell" align="right">{{ product.rated }}</td>
-            <td class="table-cell" align="right">{{ tagsString(product) }}</td>
-            <td class="table-cell" align="right">{{ colorsString(product) }}</td>
+            <td v-if="showColumns.id" class="table-cell" align="right">{{ product.id_ }}</td>
+            <td v-if="showColumns.is_new" class="table-cell" align="right">{{ product.is_new }}</td>
+            <td v-if="showColumns.availability" class="table-cell" align="right">{{ product.availability }}</td>
+            <td v-if="showColumns.shop" class="table-cell" align="left"><a :href="product.url" target="_blank">Shop</a></td>
+            <td v-if="showColumns.article_number" class="table-cell" align="right">{{ product.article_number }}</td>
+            <td v-if="showColumns.name" class="table-cell" align="right"><a :href="'product/' + product.id_" target="_blank">{{ product.short_name }}</a></td>
+            <td v-if="showColumns.package_size" class="table-cell" align="right">{{ product.package_size }}</td>
+            <td v-if="showColumns.price" class="table-cell" align="right">{{ (product.price == null) ? '-' : product.price / 100 }} €</td>
+            <td v-if="showColumns.yt_link && product.youtube_handle == null" class="table-cell" align="right"><a :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Search</a></td>
+            <td v-else-if="showColumns.yt_link" class="table-cell" align="right"><a :href="product.youtube_handle" target="_blank">YT</a></td>
+            <td v-if="showColumns.shot_count" class="table-cell" align="right">{{ (product.shot_count == null) ? '-' : product.shot_count }}</td>
+            <td v-if="showColumns.duration" class="table-cell" align="right">{{ (product.duration == null) ? '-' : product.duration }}</td>
+            <td v-if="showColumns.nem" class="table-cell" align="right">{{ (product.nem == null) ? '-' : product.nem / 1000 }} kg</td>
+            <td v-if="showColumns.weight" class="table-cell" align="right">{{ (product.weight == null) ? '-' : product.weight / 1000 }} kg</td>
+            <td v-if="showColumns.min_caliber" class="table-cell" align="right">{{ (product.min_caliber == null) ? '-' : product.min_caliber }} mm</td>
+            <td v-if="showColumns.max_caliber" class="table-cell" align="right">{{ (product.max_caliber == null) ? '-' : product.max_caliber }} mm</td>
+            <td v-if="showColumns.min_height" class="table-cell" align="right">{{ (product.min_height == null) ? '-' : product.min_height }} m</td>
+            <td v-if="showColumns.max_height" class="table-cell" align="right">{{ (product.max_height == null) ? '-' : product.max_height }} m</td>
+            <td v-if="showColumns.nem_per_second" class="table-cell" align="right">{{ (product.nem_per_second == null) ? '-' : product.nem_per_second }} kg/s</td>
+            <td v-if="showColumns.nem_per_shot" class="table-cell" align="right">{{ (product.nem_per_shot == null) ? '-' : product.nem_per_shot }} kg</td>
+            <td v-if="showColumns.price_per_second" class="table-cell" align="right">{{ (product.price_per_second == null) ? '-' : product.price_per_second }} €/s</td>
+            <td v-if="showColumns.price_per_shot" class="table-cell" align="right">{{ (product.price_per_shot == null) ? '-' : product.price_per_shot }} €</td>
+            <td v-if="showColumns.price_per_nem" class="table-cell" align="right">{{ (product.price_per_nem == null) ? '-' : product.price_per_nem }} €/kg</td>
+            <td v-if="showColumns.shots_per_second" class="table-cell" align="right">{{ (product.shots_per_second == null) ? '-' : product.shots_per_second }} Hz</td>
+            <td v-if="showColumns.rating" class="table-cell" align="right">{{ (product.rating == null) ? '-' : product.rating }}</td>
+            <td v-if="showColumns.rated" class="table-cell" align="right">{{ product.rated }}</td>
+            <td v-if="showColumns.tags" class="table-cell" align="right">{{ tagsString(product) }}</td>
+            <td v-if="showColumns.colors" class="table-cell" align="right">{{ colorsString(product) }}</td>
+            <td v-if="showColumns.fan" class="table-cell" align="right">{{ product.fan }}</td>
+
         </tr>
         </tbody>
     </table>
@@ -92,23 +116,34 @@ export default {
             currentSortOrder: 'asc',
             showColumnSelection: false,
             showColumns: {
-                shop: true,
-                name: true,
+                id: false,
+                shop: true, //url
+                name: true, //short_name
+                article_number: false,
                 price: true,
-                yt_link: true,
-                shots: true,
+                yt_link: true, //yt_link
+                weight: false,
+                min_caliber: false,
+                max_caliber: false,
+                min_height: false,
+                max_height: false,
+                shot_count: true,
                 duration: true,
+                fan: false,
                 nem: true,
+                availability: false,
+                is_new: false,
+                rating: false,
+                rated: false,
+                tags: true,
+                colors: true,
                 nem_per_second: true,
                 nem_per_shot: true,
-                price_per_second: true,
-                price_per_shot: true,
-                price_per_nem: true,
                 shots_per_second: true,
-                rating: true,
-                rated: true,
-                tags: true,
-                colors: true
+                price_per_shot: true,
+                price_per_second: true,
+                price_per_nem: true,
+                package_size: false
             },
             searchName: "",
             searches: []
