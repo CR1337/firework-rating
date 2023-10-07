@@ -57,8 +57,8 @@
             <th v-if="showColumns.shots_per_second" class="table-cell sortable" @click="sort('shots_per_second')">Shots/s</th>
             <th v-if="showColumns.rating" class="table-cell sortable" @click="sort('rating')">Rating</th>
             <th v-if="showColumns.rated" class="table-cell sortable" @click="sort('rated')">Rated</th>
-            <th v-if="showColumns.tags" class="table-cell">Tags</th>
-            <th v-if="showColumns.colors" class="table-cell">Colors</th>
+            <th v-if="showColumns.tags" class="table-cell sortable" @click="sort('tags')">Tags</th>
+            <th v-if="showColumns.colors" class="table-cell sortable" @click="sort('colors')">Colors</th>
             <th v-if="showColumns.fan" class="table-cell">Fan</th>
         </tr>
         </thead>
@@ -297,6 +297,11 @@ export default {
             return this.products.sort((a,b) => {
                 let modifier = 1;
                 if(this.currentSortOrder === 'desc') modifier = -1;
+                if (this.currentSortKey == "colors" || this.currentSortKey == "tags") {
+                    if(a[this.currentSortKey].length < b[this.currentSortKey].length) return -1 * modifier;
+                    if(a[this.currentSortKey].length > b[this.currentSortKey].length) return 1 * modifier;
+                    return 0;
+                }
                 if(a[this.currentSortKey] < b[this.currentSortKey]) return -1 * modifier;
                 if(a[this.currentSortKey] > b[this.currentSortKey]) return 1 * modifier;
                 return 0;
