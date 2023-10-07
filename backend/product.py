@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from db.base_model import BaseModel
 from peewee import (BooleanField, DoesNotExist, ForeignKeyField, IntegerField,
-                    TextField)
+                    TextField, fn, Case)
+from playhouse.hybrid import hybrid_property
 from pytube import YouTube
 
 
@@ -261,7 +262,8 @@ class ProductPropertyMixin:
         r"(?P<to_remove>[0-9]+[\s-]((Schus(s)?)|(Effekte))[\s-].*)"
     )
 
-    @cached_property
+    # @cached_property
+    @hybrid_property
     def package_size(self) -> int:
         n_packages = 1
         if "er Pack" in self.name:
@@ -273,58 +275,58 @@ class ProductPropertyMixin:
             n_packages = int(self.name[idx:idx + n_digits])
         return n_packages
 
-    @property
+    @hybrid_property
     def youtube_link(self) -> str:
         BASE_URL = "https://youtube.com"
         if self.youtube_handle is None:
             return f"{BASE_URL}/404"
         return f"{BASE_URL}/watch?v={self.youtube_handle}"
 
-    @property
+    @hybrid_property
     def nem_per_second(self) -> float:
         try:
             return round(
                 0.001 * self.nem / self.duration / self.package_size, 3
             )
         except TypeError:
-            return
+            return None
 
-    @property
+    @hybrid_property
     def nem_per_shot(self) -> float:
         try:
             return round(0.001 * self.nem / self.shot_count, 3)
         except TypeError:
-            return
+            return None
 
-    @property
+    @hybrid_property
     def shots_per_second(self) -> float:
         try:
             return round(self.shot_count / self.duration, 2)
         except TypeError:
-            return
+            return None
 
-    @property
+    @hybrid_property
     def price_per_shot(self) -> float:
         try:
             return round(0.01 * self.price / self.shot_count, 2)
         except TypeError:
-            return
+            return None
 
-    @property
+    @hybrid_property
     def price_per_second(self) -> float:
         try:
             return round(0.01 * self.price / self.duration, 2)
         except TypeError:
-            return
+            return None
 
-    @property
+    @hybrid_property
     def price_per_nem(self) -> float:
         try:
             return round(10 * self.price / self.nem, 2)
         except TypeError:
-            return
+            return None
 
-    @property
+    @hybrid_property
     def shot_count(self) -> int:
         p_size = self.package_size
         if p_size == 1:
@@ -340,8 +342,8 @@ class ProductPropertyMixin:
             return self.raw_shot_count * self.package_size
         return self.raw_shot_count
 
-    @cached_property
-    def short_name(self) -> str:
+    def _short_name(self) -> str:
+        print(type(self.name))
         matches = self.remove_from_name_pattern.findall(self.name)
         if len(matches) == 0:
             return self.name
@@ -356,8 +358,13 @@ class Product(
     BaseModel, ProductPlottingMixin,
     ProductSerializeMixin, ProductPropertyMixin, ProductVideoMixin
 ):
+    def save(self, *args, **kwargs):
+        self.short_name = self._short_name()
+        super().save(*args, **kwargs)
+
     url = TextField(unique=True)
     name = TextField()
+    short_name = TextField()
     article_number = TextField(unique=True)
     price = IntegerField(null=True)
     youtube_handle = TextField(null=True)
@@ -397,5 +404,6 @@ class ColorXProduct(BaseModel):
 
 
 if __name__ == "__main__":
-    p = Product.get()
-    p.create_plots()
+    for p in Product.select():
+        p.short_name = p._short_name
+        p.save(force_insert=False)
