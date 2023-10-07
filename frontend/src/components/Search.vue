@@ -76,18 +76,18 @@
             <td v-else-if="showColumns.yt_link" class="table-cell" align="right"><a :href="product.youtube_handle" target="_blank">YT</a></td>
             <td v-if="showColumns.shot_count" class="table-cell" align="right">{{ (product.shot_count == null) ? '-' : product.shot_count }}</td>
             <td v-if="showColumns.duration" class="table-cell" align="right">{{ (product.duration == null) ? '-' : product.duration }}</td>
-            <td v-if="showColumns.nem" class="table-cell" align="right">{{ (product.nem == null) ? '-' : product.nem / 1000 }} kg</td>
-            <td v-if="showColumns.weight" class="table-cell" align="right">{{ (product.weight == null) ? '-' : product.weight / 1000 }} kg</td>
+            <td v-if="showColumns.nem" class="table-cell" align="right">{{ (product.nem == null) ? '-' : roundTo(product.nem / 1000, 3) }} kg</td>
+            <td v-if="showColumns.weight" class="table-cell" align="right">{{ (product.weight == null) ? '-' : roundTo(product.weight / 1000, 2) }} kg</td>
             <td v-if="showColumns.min_caliber" class="table-cell" align="right">{{ (product.min_caliber == null) ? '-' : product.min_caliber }} mm</td>
             <td v-if="showColumns.max_caliber" class="table-cell" align="right">{{ (product.max_caliber == null) ? '-' : product.max_caliber }} mm</td>
             <td v-if="showColumns.min_height" class="table-cell" align="right">{{ (product.min_height == null) ? '-' : product.min_height }} m</td>
             <td v-if="showColumns.max_height" class="table-cell" align="right">{{ (product.max_height == null) ? '-' : product.max_height }} m</td>
-            <td v-if="showColumns.nem_per_second" class="table-cell" align="right">{{ (product.nem_per_second == null) ? '-' : product.nem_per_second }} kg/s</td>
-            <td v-if="showColumns.nem_per_shot" class="table-cell" align="right">{{ (product.nem_per_shot == null) ? '-' : product.nem_per_shot }} kg</td>
-            <td v-if="showColumns.price_per_second" class="table-cell" align="right">{{ (product.price_per_second == null) ? '-' : product.price_per_second }} €/s</td>
-            <td v-if="showColumns.price_per_shot" class="table-cell" align="right">{{ (product.price_per_shot == null) ? '-' : product.price_per_shot }} €</td>
-            <td v-if="showColumns.price_per_nem" class="table-cell" align="right">{{ (product.price_per_nem == null) ? '-' : product.price_per_nem }} €/kg</td>
-            <td v-if="showColumns.shots_per_second" class="table-cell" align="right">{{ (product.shots_per_second == null) ? '-' : product.shots_per_second }} Hz</td>
+            <td v-if="showColumns.nem_per_second" class="table-cell" align="right">{{ (product.nem_per_second == null) ? '-' : roundTo(product.nem_per_second, 4) }} kg/s</td>
+            <td v-if="showColumns.nem_per_shot" class="table-cell" align="right">{{ (product.nem_per_shot == null) ? '-' : roundTo(product.nem_per_shot, 4) }} kg</td>
+            <td v-if="showColumns.price_per_second" class="table-cell" align="right">{{ (product.price_per_second == null) ? '-' : roundTo(product.price_per_second, 2) }} €/s</td>
+            <td v-if="showColumns.price_per_shot" class="table-cell" align="right">{{ (product.price_per_shot == null) ? '-' : roundTo(product.price_per_shot, 2) }} €</td>
+            <td v-if="showColumns.price_per_nem" class="table-cell" align="right">{{ (product.price_per_nem == null) ? '-' : roundTo(product.price_per_nem, 2) }} €/kg</td>
+            <td v-if="showColumns.shots_per_second" class="table-cell" align="right">{{ (product.shots_per_second == null) ? '-' : roundTo(product.shots_per_second, 2) }} Hz</td>
             <td v-if="showColumns.rating" class="table-cell" align="right">{{ (product.rating == null) ? '-' : product.rating }}</td>
             <td v-if="showColumns.rated" class="table-cell" align="right">{{ product.rated }}</td>
             <td v-if="showColumns.tags" class="table-cell" align="right">{{ tagsString(product) }}</td>
@@ -101,6 +101,7 @@
 
 <script>
 import axios from 'axios';
+import { roundTo } from '@/utils/rounding.js';
 import Filter from '@/components/Filter.vue';
 
 export default {
@@ -293,6 +294,9 @@ export default {
                 .catch((error) => {
                     console.error(error);
                 });
+        },
+        roundTo(number, digits) {
+            return roundTo(number, digits);
         }
     },
     computed: {

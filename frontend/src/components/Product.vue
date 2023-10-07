@@ -151,7 +151,7 @@
             <div class="col-sm-6 stat-cell">
                 NEM/s:
                 <template v-if="product.nem_per_second != null">
-                    <b>{{ product.nem_per_second }} kg/s</b>
+                    <b>{{ roundTo(product.nem_per_second, 4) }} kg/s</b>
                     <br><img class="boxplot" :src="'http://localhost:5000/static/product_plots/' + product.id_ + '_nem_per_second.svg'" />
                 </template>
                 <template v-else>
@@ -173,7 +173,7 @@
             <div class="col-sm-6 stat-cell">
                 NEM/Shot:
                 <template v-if="product.nem_per_shot != null">
-                    <b>{{ product.nem_per_shot }} kg</b>
+                    <b>{{ roundTo(product.nem_per_shot, 4) }} kg</b>
                     <br><img class="boxplot" :src="'http://localhost:5000/static/product_plots/' + product.id_ + '_nem_per_shot.svg'" />
                 </template>
                 <template v-else>
@@ -195,7 +195,7 @@
             <div class="col-sm-6 stat-cell">
                 €/s:
                 <template v-if="product.price_per_second != null">
-                    <b>{{ product.price_per_second }} €/s</b>
+                    <b>{{ roundTo(product.price_per_second, 2) }} €/s</b>
                     <br><img class="boxplot" :src="'http://localhost:5000/static/product_plots/' + product.id_ + '_price_per_second.svg'" />
                 </template>
                 <template v-else>
@@ -207,7 +207,7 @@
             <div class="col-sm-6 stat-cell">
                 NEM:
                 <template v-if="product.nem != null">
-                    <b>{{ product.nem / 1000 }} kg</b>
+                    <b>{{ roundTo(product.nem / 1000, 3) }} kg</b>
                     <br><img class="boxplot" :src="'http://localhost:5000/static/product_plots/' + product.id_ + '_nem.svg'" />
                 </template>
                 <template v-else>
@@ -217,7 +217,7 @@
             <div class="col-sm-6 stat-cell">
                 €/Shot:
                 <template v-if="product.price_per_shot != null">
-                    <b>{{ product.price_per_shot }} €</b>
+                    <b>{{ roundTo(product.price_per_shot, 2) }} €</b>
                     <br><img class="boxplot" :src="'http://localhost:5000/static/product_plots/' + product.id_ + '_price_per_shot.svg'" />
                 </template>
                 <template v-else>
@@ -239,7 +239,7 @@
             <div class="col-sm-6 stat-cell">
                 €/NEM:
                 <template v-if="product.price_per_nem != null">
-                    <b>{{ product.price_per_nem }} €/kg</b>
+                    <b>{{ roundTo(product.price_per_nem, 2) }} €/kg</b>
                     <br><img class="boxplot" :src="'http://localhost:5000/static/product_plots/' + product.id_ + '_price_per_nem.svg'" />
                 </template>
                 <template v-else>
@@ -261,7 +261,7 @@
             <div class="col-sm-6 stat-cell">
                 Shots/s:
                 <template v-if="product.shots_per_second != null">
-                    <b>{{ product.shots_per_second }} Hz</b>
+                    <b>{{ roundTo(product.shots_per_second, 2) }} Hz</b>
                     <br><img class="boxplot" :src="'http://localhost:5000/static/product_plots/' + product.id_ + '_shots_per_second.svg'" />
                 </template>
                 <template v-else>
@@ -279,6 +279,7 @@
 
 <script>
 import axios from 'axios';
+import { roundTo } from '@/utils/rounding.js';
 import { SmartTagz } from "smart-tagz";
 import "smart-tagz/dist/smart-tagz.css";
 import * as ytVideos from '@/utils/ytVideos';
@@ -541,6 +542,9 @@ export default {
             });
             const button = document.getElementById(id);
             button.dispatchEvent(clickEvent);
+        },
+        roundTo(number, digits) {
+            return roundTo(number, digits);
         }
     },
     created() {
