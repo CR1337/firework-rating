@@ -1,0 +1,45 @@
+{
+    "uuid": "root",
+    "type": "group",
+    "inverted": false,
+    "caseSensitive": false,
+    "filters": [
+        {
+            "uuid": "b6d125a8-91b5-4403-871e-17429585f59b",
+            "type": "boolean",
+            "inverted": false,
+            "columnName": "availability",
+            "operator": "and"
+        },
+        {
+            "uuid": "dec0229c-2b52-4d46-b6f7-305822f1d510",
+            "type": "boolean",
+            "inverted": false,
+            "columnName": "rating",
+            "operator": "and"
+        },
+        {
+            "uuid": "c917311a-ee4e-4d00-ab56-c9d7fea27a60",
+            "type": "group",
+            "filters": [
+                {
+                    "uuid": "9511de82-ea13-4605-b856-cb71b095048e",
+                    "type": "color",
+                    "value": "gelb",
+                    "operation": "has_only",
+                    "inverted": false,
+                    "operator": "and"
+                },
+                {
+                    "uuid": "d0ad6dbb-83a1-4864-9cfb-9fc092925ce2",
+                    "type": "color",
+                    "value": "gold",
+                    "operation": "has_only",
+                    "inverted": false,
+                    "operator": "or"
+                }
+            ],
+            "operator": "and"
+        }
+    ]
+}
