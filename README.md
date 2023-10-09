@@ -1,6 +1,6 @@
 # Firework Rating
 
-This app scrapes products from [Pyroland](https://pyroland.de) and stores them i a database. The user is then able to inspect the products in detail and to rate them. After rating the user profits from a powerful search engine that enables complex search queries against the database.
+This app scrapes products from [Pyroland](https://pyroland.de) and stores them in a database. The user is then able to inspect the products in detail and to rate them. After rating the user profits from a powerful search engine that enables complex search queries against the database.
 
 ## Installation
 
