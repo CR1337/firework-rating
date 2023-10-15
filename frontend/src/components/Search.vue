@@ -89,7 +89,7 @@
             <td v-if="showColumns.yt_link && product.youtube_handle == null" class="table-cell" align="right"><a :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Search</a></td>
             <td v-else-if="showColumns.yt_link" class="table-cell" align="right"><a :href="'https://youtube.com/watch?v=' + product.youtube_handle" target="_blank">YT</a></td>
             <td v-if="showColumns.shot_count" class="table-cell" align="right">{{ (product.shot_count == null) ? '-' : product.shot_count }}</td>
-            <td v-if="showColumns.duration" class="table-cell" align="right">{{ (product.duration == null) ? '-' : product.duration }}</td>
+            <td v-if="showColumns.duration" class="table-cell" align="right">{{ (product.duration == null) ? '-' : product.duration }} s</td>
             <td v-if="showColumns.nem" class="table-cell" align="right">{{ (product.nem == null) ? '-' : roundTo(product.nem / 1000, 3) }} kg</td>
             <td v-if="showColumns.weight" class="table-cell" align="right">{{ (product.weight == null) ? '-' : roundTo(product.weight / 1000, 2) }} kg</td>
             <td v-if="showColumns.min_caliber" class="table-cell" align="right">{{ (product.min_caliber == null) ? '-' : product.min_caliber }} mm</td>
