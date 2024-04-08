@@ -2,7 +2,7 @@ import os
 import sys
 
 from db.base_model import db
-from product import Product, Tag, TagXProduct
+from product import Product, Tag, TagXProduct, Color, ColorXProduct
 from scraper import Scraper
 from temp_directory import TempDirectory
 
@@ -15,7 +15,7 @@ PLOTS_DIRECTORY: str = "backend/static/product_plots"
 
 def db_create():
     db.connect()
-    db.create_tables([Product, Tag, TagXProduct])
+    db.create_tables([Product, Tag, TagXProduct, Color, ColorXProduct])
     for tag in TAGS:
         Tag.create(name=tag)
     db.close()
