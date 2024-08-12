@@ -88,7 +88,7 @@
                     <a v-if="product.youtube_handle == null" :href="'https://youtube.com/results?search_query=' + product.name" target="_blank">Youtube Search</a>
                 </div>
                 <div v-else>
-                    <video
+                    <!--<video
                         id="video-player"
                         class="video-js"
                         controls
@@ -98,7 +98,8 @@
                         :src="'http://localhost:5000/static/videos/' + product.id_ + '.mp4'"
                         type="video/mp4"
                     >
-                    </video>
+                    </video>-->
+                    <a v-if="product.youtube_handle != null" :href="'https://www.youtube.com/watch?v=' + product.youtube_handle" target="_blank">Youtube Video</a>
                 </div>
             </div>
             <div class="col-sm-4">
