@@ -250,7 +250,7 @@
         </div>
         <div class="row">
             <div class="col-sm-6 stat-cell">
-                Miax. Height:
+                Max. Height:
                 <template v-if="product.max_height != null">
                     <b>{{ product.max_height }} m</b>
                     <br><img class="boxplot" :src="'http://localhost:5000/static/product_plots/' + product.id_ + '_max_height.svg'" />
